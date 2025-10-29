@@ -1,0 +1,108 @@
+# Gradle files
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Android Studio / IntelliJ IDEA
+*.iml
+.idea/
+*.ipr
+*.iws
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries/
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/misc.xml
+
+# Android
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.ap_
+*.aab
+
+# iOS / Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+*.xcuserstate
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+build/
+Pods/
+.DS_Store
+
+# Kotlin Multiplatform
+*.kotlin_module
+*.kotlin-module
+composeApp/build/
+iosApp/build/
+shared/build/
+app/build/
+
+# Java class files
+*.class
+*.jar
+*.war
+*.ear
+
+# Package Files
+*.nar
+
+# Log Files
+*.log
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node (for any web modules)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Kotlin Native
+*.kexe
+*.klib
+
+# Compose for Desktop
+composeApp/desktopApp/
+*.dmg
+*.pkg
+*.exe
+
+# Backup files
+*~
+*.swp
+*.bak
+*.tmp
+*.orig
+
+# Test results
+test-results/
+*.test
+
+# Gradle wrapper (optional - uncomment to ignore)
+# gradle-wrapper.jar
+# gradle-wrapper.properties
