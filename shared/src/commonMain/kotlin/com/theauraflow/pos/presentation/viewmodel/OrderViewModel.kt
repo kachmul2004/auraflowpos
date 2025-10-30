@@ -6,6 +6,7 @@ import com.theauraflow.pos.domain.model.OrderStatus
 import com.theauraflow.pos.domain.model.PaymentMethod
 import com.theauraflow.pos.domain.repository.OrderStatistics
 import com.theauraflow.pos.domain.usecase.order.CancelOrderUseCase
+import com.theauraflow.pos.domain.usecase.order.CreateOrderUseCase
 import com.theauraflow.pos.domain.usecase.order.GetOrderStatisticsUseCase
 import com.theauraflow.pos.domain.usecase.order.GetOrdersUseCase
 import com.theauraflow.pos.domain.usecase.order.GetTodayOrdersUseCase
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
  * ViewModel for order management.
  */
 class OrderViewModel(
+    private val createOrderUseCase: CreateOrderUseCase,
     private val getOrdersUseCase: GetOrdersUseCase,
     private val getTodayOrdersUseCase: GetTodayOrdersUseCase,
     private val cancelOrderUseCase: CancelOrderUseCase,
@@ -35,11 +37,40 @@ class OrderViewModel(
     private val _statisticsState = MutableStateFlow<UiState<OrderStatistics>>(UiState.Loading())
     val statisticsState: StateFlow<UiState<OrderStatistics>> = _statisticsState.asStateFlow()
 
+    private val _lastCreatedOrder = MutableStateFlow<Order?>(null)
+    val lastCreatedOrder: StateFlow<Order?> = _lastCreatedOrder.asStateFlow()
+
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
     init {
         loadTodayOrders()
+    }
+
+    /**
+     * Create a new order from current cart.
+     */
+    fun createOrder(
+        customerId: String? = null,
+        paymentMethod: PaymentMethod,
+        amountPaid: Double? = null,
+        notes: String? = null
+    ) {
+        viewModelScope.launch(Dispatchers.Default) {
+            createOrderUseCase(
+                customerId = customerId,
+                paymentMethod = paymentMethod,
+                amountPaid = amountPaid,
+                notes = notes
+            ).onSuccess { order ->
+                _lastCreatedOrder.value = order
+                _message.value = "Order created successfully"
+                // Refresh today's orders
+                loadTodayOrders()
+            }.onFailure { error ->
+                _message.value = error.message ?: "Failed to create order"
+            }
+        }
     }
 
     /**

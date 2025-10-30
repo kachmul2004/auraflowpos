@@ -9,10 +9,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
+import com.theauraflow.pos.presentation.viewmodel.OrderViewModel
+import com.theauraflow.pos.presentation.viewmodel.CustomerViewModel
 import com.theauraflow.pos.ui.components.ProductGrid
 import com.theauraflow.pos.ui.components.ShoppingCart
 import com.theauraflow.pos.ui.dialog.ReceiptDialog
 import com.theauraflow.pos.domain.model.CartItem
+import com.theauraflow.pos.domain.model.PaymentMethod
 import kotlin.random.Random
 
 /**
@@ -24,6 +27,8 @@ import kotlin.random.Random
 fun POSScreen(
     productViewModel: ProductViewModel,
     cartViewModel: CartViewModel,
+    orderViewModel: OrderViewModel,
+    customerViewModel: CustomerViewModel,
     modifier: Modifier = Modifier
 ) {
     val productsState by productViewModel.productsState.collectAsState()
@@ -37,6 +42,8 @@ fun POSScreen(
         is com.theauraflow.pos.presentation.base.UiState.Success -> s.data
         else -> com.theauraflow.pos.presentation.viewmodel.CartUiState()
     }
+
+    val lastCreatedOrder by orderViewModel.lastCreatedOrder.collectAsState()
 
     val cartItems = cartUi.items
     val subtotal = cartUi.subtotal
@@ -58,12 +65,41 @@ fun POSScreen(
     var completedPaymentMethod by remember { mutableStateOf("") }
     var completedAmountReceived by remember { mutableStateOf(0.0) }
 
+    val customersState by customerViewModel.customersState.collectAsState()
+    val selectedCustomer by customerViewModel.selectedCustomer.collectAsState()
+
+    // Extract customers list from state
+    val customers = remember(customersState) {
+        when (val state = customersState) {
+            is com.theauraflow.pos.presentation.base.UiState.Success -> state.data
+            else -> emptyList()
+        }
+    }
+
     // Filter products by search query
     val filteredProducts = remember(products, searchQuery) {
         if (searchQuery.isBlank()) products
         else products.filter {
             it.name.contains(searchQuery, ignoreCase = true) ||
                     it.sku?.contains(searchQuery, ignoreCase = true) == true
+        }
+    }
+
+    // Watch for newly created orders
+    LaunchedEffect(lastCreatedOrder) {
+        lastCreatedOrder?.let { order ->
+            // Update receipt with actual order data
+            completedOrderNumber = order.orderNumber
+            completedItems = order.items
+            completedSubtotal = order.subtotal
+            completedDiscount = order.discount
+            completedTax = order.tax
+            completedTotal = order.total
+            completedPaymentMethod = order.paymentMethod.name
+            // Note: amountReceived is still from the payment dialog
+            // We could add it to Order model in future
+
+            showReceiptDialog = true
         }
     }
 
@@ -127,6 +163,15 @@ fun POSScreen(
             tax = tax,
             discount = discount,
             total = total,
+            customers = customers,
+            selectedCustomer = selectedCustomer,
+            onSelectCustomer = { customer ->
+                if (customer != null) {
+                    customerViewModel.selectCustomer(customer.id)
+                } else {
+                    customerViewModel.clearSelection()
+                }
+            },
             onUpdateItem = { cartItem, newQuantity, itemDiscount, priceOverride ->
                 // Update quantity
                 if (newQuantity != cartItem.quantity) {
@@ -141,22 +186,27 @@ fun POSScreen(
             onClearCart = {
                 cartViewModel.clearCart()
             },
-            onCheckout = { paymentMethod, amountReceived ->
-                // Store order details for receipt
-                completedOrderNumber = "ORD-${Random.nextInt(10000, 99999)}"
-                completedItems = cartItems
-                completedSubtotal = subtotal
-                completedDiscount = discount
-                completedTax = tax
-                completedTotal = total
-                completedPaymentMethod = paymentMethod
+            onCheckout = { paymentMethodString, amountReceived ->
+                // Convert string to PaymentMethod enum
+                val paymentMethod = when (paymentMethodString.lowercase()) {
+                    "cash" -> PaymentMethod.CASH
+                    "card" -> PaymentMethod.CARD
+                    else -> PaymentMethod.OTHER
+                }
+
+                // Store amount received for receipt (before cart is cleared)
                 completedAmountReceived = amountReceived
 
-                // Clear cart
-                cartViewModel.clearCart()
+                // Create order via OrderViewModel
+                orderViewModel.createOrder(
+                    customerId = selectedCustomer?.id, // Get from customer selection
+                    paymentMethod = paymentMethod,
+                    amountPaid = if (paymentMethod == PaymentMethod.CASH) amountReceived else null,
+                    notes = null // TODO: Get from order notes
+                )
 
-                // Show receipt
-                showReceiptDialog = true
+                // Cart will be cleared automatically by CreateOrderUseCase
+                // Receipt will be shown automatically by LaunchedEffect watching lastCreatedOrder
             },
             modifier = Modifier
                 .weight(3f)

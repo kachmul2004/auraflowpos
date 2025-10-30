@@ -28,6 +28,8 @@ import com.theauraflow.pos.domain.usecase.product.SearchProductsUseCase
 import com.theauraflow.pos.domain.repository.CartRepository
 import com.theauraflow.pos.presentation.viewmodel.AuthViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
+import com.theauraflow.pos.presentation.viewmodel.CustomerViewModel
+import com.theauraflow.pos.presentation.viewmodel.OrderViewModel
 import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -105,6 +107,29 @@ val domainModule = module {
             loginUseCase = get(),
             logoutUseCase = get(),
             refreshTokenUseCase = get(),
+            viewModelScope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
+    single {
+        OrderViewModel(
+            createOrderUseCase = get(),
+            getOrdersUseCase = get(),
+            getTodayOrdersUseCase = get(),
+            cancelOrderUseCase = get(),
+            refundOrderUseCase = get(),
+            getOrderStatisticsUseCase = get(),
+            viewModelScope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
+    single {
+        CustomerViewModel(
+            searchCustomersUseCase = get(),
+            getCustomerUseCase = get(),
+            createCustomerUseCase = get(),
+            updateLoyaltyPointsUseCase = get(),
+            getTopCustomersUseCase = get(),
             viewModelScope = CoroutineScope(Dispatchers.Default)
         )
     }

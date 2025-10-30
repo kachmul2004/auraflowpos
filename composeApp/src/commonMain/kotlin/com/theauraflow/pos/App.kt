@@ -7,6 +7,8 @@ import com.theauraflow.pos.ui.screen.POSScreen
 import com.theauraflow.pos.presentation.viewmodel.AuthViewModel
 import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
+import com.theauraflow.pos.presentation.viewmodel.OrderViewModel
+import com.theauraflow.pos.presentation.viewmodel.CustomerViewModel
 import org.koin.compose.koinInject
 
 /**
@@ -24,6 +26,8 @@ private fun AuraFlowApp() {
     val authViewModel: AuthViewModel = koinInject()
     val productViewModel: ProductViewModel = koinInject()
     val cartViewModel: CartViewModel = koinInject()
+    val orderViewModel: OrderViewModel = koinInject()
+    val customerViewModel: CustomerViewModel = koinInject()
 
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
 
@@ -31,7 +35,9 @@ private fun AuraFlowApp() {
         if (isLoggedIn) {
             POSScreen(
                 productViewModel = productViewModel,
-                cartViewModel = cartViewModel
+                cartViewModel = cartViewModel,
+                orderViewModel = orderViewModel,
+                customerViewModel = customerViewModel
             )
         } else {
             LoginScreen(

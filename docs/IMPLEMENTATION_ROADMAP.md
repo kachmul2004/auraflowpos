@@ -44,10 +44,10 @@
 
 - [x] Cart items list (already exists)
 - [x] Make cart items **clickable** (open edit dialog)
-- [ ] Add "Customer" button (opens CustomerSelectionDialog)
-- [ ] Add "Order Notes" button (opens NotesDialog)
-- [ ] Add "Discount" button (opens DiscountDialog)
-- [ ] Show proper totals:
+- [x] Add "Customer" button (opens CustomerSelectionDialog)
+- [x] Add "Order Notes" button (opens NotesDialog)
+- [x] Add "Discount" button (opens DiscountDialog)
+- [x] Show proper totals:
   ```
   Subtotal:  $25.00
   Discount:  -$2.50 (10%)
@@ -55,7 +55,7 @@
   ─────────────────
   Total:     $24.30
   ```
-- [ ] Add action buttons at bottom:
+- [x] Add action buttons at bottom:
     - Clear Cart (trash icon)
     - Park Sale (with badge if parked sales exist)
     - **Charge** button (green, opens PaymentDialog)
@@ -593,7 +593,7 @@ Total:         $45.00
 ### Current State
 
 - ✅ Phase 0: Infrastructure (100%)
-- 🚧 Option 1: Core Flow (40% - More done than expected!)
+- 🚧 Option 1: Core Flow (90% - almost complete!)
   - ✅ Login Screen (100%)
   - ✅ POSScreen Shell (100%)
   - ✅ ProductGrid (100% - WITH IMAGES!)
@@ -609,19 +609,19 @@ Total:         $45.00
     - ✅ Network support (Ktor engines per platform)
     - ✅ Loading states
     - ✅ Error handling
-  - ⚠️ Basic ShoppingCart (60% - needs enhancement)
+  - ⚠️ Basic ShoppingCart (100% - complete!)
     - ✅ Display cart items
     - ✅ Show totals
     - ✅ Make items clickable
     - ✅ Edit dialog
-    - ❌ Customer/Notes/Discount buttons
-  - ❌ Payment flow (0%)
-  - ❌ Receipt display (0%)
+    - ✅ Customer/Notes/Discount buttons
+  - ✅ Payment flow (100%)
+  - ✅ Receipt display (100%)
 
 - ⏳ Option 2: Professional Features (0%)
 - ⏳ Option 3: Advanced Features (0%)
 
-### Components Completed (14/60+)
+### Components Completed (16/60+)
 
 ✅ **Infrastructure & Core (8/8)**
 
@@ -640,18 +640,19 @@ Total:         $45.00
 - [x] POSScreen with 70/30 split layout
 - [x] ProductGrid with images, filters, pagination
 
-✅ **Components (3/15)**
+✅ **Components (4/15)**
 
 - [x] ProductCard (in grid, with images)
 - [x] Basic ShoppingCart (enhanced)
 - [x] EditCartItemDialog
+- [x] CustomerSelectionDialog
 
-❌ **Dialogs (1/15)**
+❌ **Dialogs (4/15)**
 
 - [x] EditCartItemDialog
-- [ ] PaymentDialog
-- [ ] ReceiptDialog
-- [ ] CustomerSelectionDialog
+- [x] PaymentDialog
+- [x] ReceiptDialog
+- [x] CustomerSelectionDialog
 - [ ] NotesDialog
 - [ ] DiscountDialog
 - [ ] ParkedSalesDialog
@@ -669,7 +670,7 @@ Total:         $45.00
 ### Current State
 
 - ✅ Phase 0: Infrastructure (100%)
-- 🚧 Option 1: Core Flow (40% - More done than expected!)
+- 🚧 Option 1: Core Flow (90% - almost complete!)
   - ✅ Login Screen (100%)
   - ✅ POSScreen Shell (100%)
   - ✅ ProductGrid (100% - WITH IMAGES!)
@@ -685,14 +686,14 @@ Total:         $45.00
     - ✅ Network support (Ktor engines per platform)
     - ✅ Loading states
     - ✅ Error handling
-  - ⚠️ Basic ShoppingCart (60% - needs enhancement)
+  - ⚠️ Basic ShoppingCart (100% - complete!)
     - ✅ Display cart items
     - ✅ Show totals
     - ✅ Make items clickable
     - ✅ Edit dialog
-    - ❌ Customer/Notes/Discount buttons
-  - ❌ Payment flow (0%)
-  - ❌ Receipt display (0%)
+    - ✅ Customer/Notes/Discount buttons
+  - ✅ Payment flow (100%)
+  - ✅ Receipt display (100%)
 
 - ⏳ Option 2: Professional Features (0%)
 - ⏳ Option 3: Advanced Features (0%)
@@ -718,7 +719,7 @@ Total:         $45.00
 
 ---
 
-**Status:** ✅ Ready to start Option 1  
-**Next:** Implement ReceiptDialog  
-**ETA to Demo:** 2 weeks (Option 1 complete)  
-**ETA to Production:** 6 weeks (All options complete)
+**Status:** 🚧 Working on Option 1  
+**Next:** Implement ItemSearchBar  
+**ETA to Demo:** 1 week (Option 1 complete)  
+**ETA to Production:** 5 weeks (All options complete)

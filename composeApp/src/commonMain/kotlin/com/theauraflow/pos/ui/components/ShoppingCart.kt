@@ -38,6 +38,8 @@ import com.theauraflow.pos.domain.model.CartItem
 import com.theauraflow.pos.core.util.formatCurrency
 import com.theauraflow.pos.ui.dialog.EditCartItemDialog
 import com.theauraflow.pos.ui.dialog.PaymentDialog
+import com.theauraflow.pos.ui.dialog.CustomerSelectionDialog
+import com.theauraflow.pos.domain.model.Customer
 
 /**
  * Shopping cart sidebar component matching the web design.
@@ -68,6 +70,9 @@ fun ShoppingCart(
     onCheckout: (paymentMethod: String, amountReceived: Double) -> Unit,
     onRemoveItem: (CartItem) -> Unit = {},
     modifier: Modifier = Modifier,
+    customers: List<Customer> = emptyList(),
+    selectedCustomer: Customer? = null,
+    onSelectCustomer: (Customer?) -> Unit = {},
     customerName: String? = null,
     onAddCustomer: () -> Unit = {},
     onAddNotes: () -> Unit = {},
@@ -84,6 +89,9 @@ fun ShoppingCart(
 
     // State for PaymentDialog
     var showPaymentDialog by remember { mutableStateOf(false) }
+
+    // State for CustomerSelectionDialog
+    var showCustomerDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = modifier,
@@ -109,7 +117,7 @@ fun ShoppingCart(
                 ) {
                     // Customer Button
                     OutlinedButton(
-                        onClick = onAddCustomer,
+                        onClick = { showCustomerDialog = true },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
@@ -573,6 +581,18 @@ fun ShoppingCart(
                 onCompletePayment = { paymentMethod, amountReceived ->
                     onCheckout(paymentMethod, amountReceived)
                     showPaymentDialog = false
+                }
+            )
+
+            // Customer Selection Dialog
+            CustomerSelectionDialog(
+                show = showCustomerDialog,
+                customers = customers,
+                currentCustomer = selectedCustomer,
+                onDismiss = { showCustomerDialog = false },
+                onSelectCustomer = { customer ->
+                    onSelectCustomer(customer)
+                    showCustomerDialog = false
                 }
             )
         }
