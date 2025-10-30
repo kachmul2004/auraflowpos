@@ -566,13 +566,13 @@ composeApp/src/commonMain/kotlin/com/theauraflow/pos/
 
 ## 📊 Implementation Phases
 
-### Current Status: Phase 1 (Foundation Setup)
+### Current Status: Phase 2 (Domain Layer)
 
 | Phase | Status | ETA | Notes |
 |-------|--------|-----|-------|
 | Phase 0: Server Infrastructure | ✅ COMPLETED | Week 1 | Setting up infrastructure |
 | Phase 1: Foundation | 🟡 In Progress | Week 1 | Setting up client infrastructure |
-| Phase 2: Domain Layer | ⚪ Not Started | Week 2 | |
+| Phase 2: Domain Layer | 🟡 In Progress | Week 2 | Implementing domain models, repository interfaces and use cases |
 | Phase 3: Data Layer | ⚪ Not Started | Week 2-3 | |
 | Phase 4: UI/UX | ⚪ Not Started | Week 3-5 | |
 | Phase 5: Platform Features | ⚪ Not Started | Week 5-6 | |
