@@ -25,6 +25,11 @@ import com.theauraflow.pos.domain.usecase.order.RefundOrderUseCase
 import com.theauraflow.pos.domain.usecase.product.GetProductsByCategoryUseCase
 import com.theauraflow.pos.domain.usecase.product.GetProductsUseCase
 import com.theauraflow.pos.domain.usecase.product.SearchProductsUseCase
+import com.theauraflow.pos.domain.repository.CartRepository
+import com.theauraflow.pos.presentation.viewmodel.CartViewModel
+import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
@@ -68,4 +73,29 @@ val domainModule = module {
     factoryOf(::LoginUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::RefreshTokenUseCase)
+
+    // ViewModels
+    single {
+        ProductViewModel(
+            getProductsUseCase = get(),
+            searchProductsUseCase = get(),
+            getProductsByCategoryUseCase = get(),
+            viewModelScope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
+    single {
+        CartViewModel(
+            cartRepository = get(),
+            addToCartUseCase = get(),
+            updateCartItemUseCase = get(),
+            removeFromCartUseCase = get(),
+            clearCartUseCase = get(),
+            applyDiscountUseCase = get(),
+            getCartTotalsUseCase = get(),
+            holdCartUseCase = get(),
+            retrieveCartUseCase = get(),
+            viewModelScope = CoroutineScope(Dispatchers.Default)
+        )
+    }
 }
