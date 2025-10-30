@@ -36,7 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.theauraflow.pos.domain.model.CartItem
 import com.theauraflow.pos.core.util.formatCurrency
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.theauraflow.pos.ui.dialog.EditCartItemDialog
+import com.theauraflow.pos.ui.dialog.PaymentDialog
 
 /**
  * Shopping cart sidebar component matching the web design.
@@ -47,6 +48,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * - Customer selection button with badge
  * - Order notes button
  * - Scrollable cart items with gradient backgrounds
+ * - Click cart item to open EditCartItemDialog
  * - Inline modifiers display
  * - Discount section with dialog
  * - Totals (Subtotal, Discount, Tax, Total)
@@ -60,9 +62,10 @@ fun ShoppingCart(
     discount: Double = 0.0,
     total: Double,
     isCartEmpty: Boolean = items.isEmpty(),
-    onEditItem: (CartItem) -> Unit = {},
+    onUpdateItem: (CartItem, Int, Double?, Double?) -> Unit = { _, _, _, _ -> },
+    onVoidItem: (CartItem) -> Unit = {},
     onClearCart: () -> Unit,
-    onCheckout: () -> Unit,
+    onCheckout: (paymentMethod: String, amountReceived: Double) -> Unit,
     onRemoveItem: (CartItem) -> Unit = {},
     modifier: Modifier = Modifier,
     customerName: String? = null,
@@ -74,6 +77,13 @@ fun ShoppingCart(
     var showDiscountDialog by remember { mutableStateOf(false) }
     var discountType by remember { mutableStateOf(true) } // true = percentage, false = fixed
     var discountValue by remember { mutableStateOf("") }
+
+    // State for EditCartItemDialog
+    var selectedItem by remember { mutableStateOf<CartItem?>(null) }
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    // State for PaymentDialog
+    var showPaymentDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = modifier,
@@ -227,7 +237,10 @@ fun ShoppingCart(
                         items(items) { item ->
                             CartItemButton(
                                 cartItem = item,
-                                onClick = { onEditItem(item) },
+                                onClick = {
+                                    selectedItem = item
+                                    showEditDialog = true
+                                },
                                 colors = colors
                             )
                         }
@@ -410,7 +423,7 @@ fun ShoppingCart(
 
                         // Charge Button (Primary, green)
                         Button(
-                            onClick = onCheckout,
+                            onClick = { showPaymentDialog = true },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(40.dp),
@@ -429,7 +442,7 @@ fun ShoppingCart(
                                 modifier = Modifier.size(18.dp),
                                 tint = Color.White
                             )
-                            Spacer(modifier = Modifier.width(8.dp)) // changed to 8.dp
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text("Charge", fontSize = 12.sp, fontWeight = FontWeight.Medium)
                         }
                     }
@@ -527,6 +540,41 @@ fun ShoppingCart(
                     }
                 )
             }
+
+            // Edit Cart Item Dialog
+            if (showEditDialog && selectedItem != null) {
+                EditCartItemDialog(
+                    cartItem = selectedItem!!,
+                    onDismiss = {
+                        showEditDialog = false
+                        selectedItem = null
+                    },
+                    onSave = { quantity, discount, priceOverride ->
+                        onUpdateItem(selectedItem!!, quantity, discount, priceOverride)
+                        showEditDialog = false
+                        selectedItem = null
+                    },
+                    onVoid = {
+                        onVoidItem(selectedItem!!)
+                        showEditDialog = false
+                        selectedItem = null
+                    }
+                )
+            }
+
+            // Payment Dialog
+            PaymentDialog(
+                open = showPaymentDialog,
+                subtotal = subtotal,
+                discount = discount,
+                tax = tax,
+                total = total,
+                onDismiss = { showPaymentDialog = false },
+                onCompletePayment = { paymentMethod, amountReceived ->
+                    onCheckout(paymentMethod, amountReceived)
+                    showPaymentDialog = false
+                }
+            )
         }
     }
 }
@@ -617,36 +665,5 @@ private fun CartItemButton(
                 }
             }
         }
-    }
-}
-
-@Preview
-@Composable
-private fun ShoppingCartPreview() {
-    MaterialTheme {
-        ShoppingCart(
-            items = listOf(
-                CartItem(
-                    id = "1",
-                    product = com.theauraflow.pos.domain.model.Product(
-                        id = "p1",
-                        name = "Espresso",
-                        price = 3.50,
-                        stockQuantity = 50,
-                        categoryId = "coffee"
-                    ),
-                    quantity = 2,
-                    modifiers = emptyList(),
-                    discount = null
-                )
-            ),
-            subtotal = 7.00,
-            tax = 0.56,
-            discount = 0.0,
-            total = 7.56,
-            onClearCart = {},
-            onCheckout = {},
-            customerName = "John Doe"
-        )
     }
 }

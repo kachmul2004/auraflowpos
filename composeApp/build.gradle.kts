@@ -44,7 +44,33 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.android)
+
+            // Ktor engine for Android - REQUIRED for Coil network loading
+            implementation(libs.ktor.client.okhttp)
         }
+
+        iosMain.dependencies {
+            // Ktor engine for iOS - REQUIRED for Coil network loading
+            implementation(libs.ktor.client.darwin)
+        }
+
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
+
+            // Ktor engine for JVM/Desktop - REQUIRED for Coil network loading
+            implementation(libs.ktor.client.okhttp)
+        }
+
+        jsMain.dependencies {
+            // Ktor engine for JS - Auto-configured
+        }
+
+        wasmJsMain.dependencies {
+            // Ktor engine for WASM - Auto-configured
+        }
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -58,14 +84,20 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+
+            // Coil dependencies for image loading
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3) // Add Ktor network support
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.serialization)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines.core)
             implementation(projects.shared)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-        }
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
         }
     }
 }

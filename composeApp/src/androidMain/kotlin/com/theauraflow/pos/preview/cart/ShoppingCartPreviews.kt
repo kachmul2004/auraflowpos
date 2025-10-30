@@ -22,7 +22,7 @@ private fun ShoppingCartEmptyPreview() {
             tax = 0.0,
             total = 0.0,
             onClearCart = {},
-            onCheckout = {},
+            onCheckout = { _, _ -> },
             customerName = null,
             onAddCustomer = {},
             onAddNotes = {}
@@ -74,7 +74,7 @@ private fun ShoppingCartWithItemsPreview() {
             discount = 0.0,
             total = 12.96,
             onClearCart = {},
-            onCheckout = {},
+            onCheckout = { _, _ -> },
             customerName = "John Doe",
             onAddCustomer = {},
             onAddNotes = {}
@@ -107,7 +107,7 @@ private fun ShoppingCartWithDiscountPreview() {
             discount = 1.50,
             total = 11.30,
             onClearCart = {},
-            onCheckout = {},
+            onCheckout = { _, _ -> },
             customerName = null,
             onAddCustomer = {},
             onAddNotes = {}
@@ -146,7 +146,7 @@ private fun ShoppingCartDarkPreview() {
             discount = 0.0,
             total = 5.13,
             onClearCart = {},
-            onCheckout = {},
+            onCheckout = { _, _ -> },
             customerName = "Sarah Smith",
             onAddCustomer = {},
             onAddNotes = {}
