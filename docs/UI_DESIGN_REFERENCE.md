@@ -3,34 +3,40 @@
 ## 🎯 Design Source
 
 All UI components in this Kotlin Multiplatform project MUST match the original AuraFlow POS designs
-from the **local web version reference**.
+from the **web version TypeScript/React components**.
 
-**Source Location:** `docs/Web Version/src/android/`  
-**Original Repository:** `kachmul2004/Auraflowposweb` (archived locally)
+**Source Location:** `docs/Web Version/src/`  
+**Original Repository:** `kachmul2004/Auraflowposweb` (archived locally)  
+**Languages:** TypeScript (.tsx) and CSS
 
 ---
 
 ## 📁 Reference Files
 
-### Theme & Colors
+### Styles & Theme
 
-- **Path:** `docs/Web Version/src/android/theme/Color.kt`
-- **Purpose:** Exact color values, naming conventions
-- **Key Colors:** Purple500, Purple700, Pink500, Teal200, etc.
+- **Globals CSS:** `docs/Web Version/src/styles/globals.css`
+- **Component Styles:** `docs/Web Version/src/components/` (CSS files with components)
+- **Purpose:** Exact color values, spacing, typography, themes
 
 ### Components
 
-- **ProductCard:** `docs/Web Version/src/android/components/ProductCard.kt`
-- **ProductGrid:** `docs/Web Version/src/android/components/ProductGrid.kt`
-- **ShoppingCart:** `docs/Web Version/src/android/components/ShoppingCart.kt`
-- **ActionBar:** `docs/Web Version/src/android/components/ActionBar.kt`
-- **CategoryFilter:** `docs/Web Version/src/android/components/CategoryFilter.kt`
-- **PaymentDialog:** `docs/Web Version/src/android/components/PaymentDialog.kt`
-- **NumericKeypad:** `docs/Web Version/src/android/components/NumericKeypad.kt`
+Component references are located in `docs/Web Version/src/components/`:
+
+- **ProductCard:** Look for product card component (50/50 horizontal split, stock badge)
+- **ProductGrid:** Grid layout for displaying products
+- **ShoppingCart:** Cart container with items list
+- **ActionBar:** Top navigation bar
+- **CategoryFilter:** Category chips for filtering
+- **PaymentDialog:** Payment method selection
+- **NumericKeypad:** Number input pad
 
 ### Screens
 
-- **POSScreen:** `docs/Web Version/src/android/screens/POSScreen.kt`
+- **POSView:** Main POS screen layout (grid + cart + actions)
+- **CheckoutView:** Checkout/payment screen
+- **OrderHistoryView:** Order history list
+- **LoginView:** Login/authentication screen
 
 ---
 
@@ -38,19 +44,20 @@ from the **local web version reference**.
 
 For each component, we will:
 
-1. **Read the original Kotlin/Android implementation** from `docs/Web Version/src/android/`
-2. **Extract design specifications:**
-    - Colors
-    - Spacing (padding, margins)
-    - Typography
-    - Corner radius
-    - Elevation/shadows
+1. **Read the original TypeScript/React implementation** from `docs/Web Version/src/components/`
+2. **Extract design specifications from CSS/JSX:**
+   - Colors (hex values from globals.css)
+   - Spacing (padding, margins, gaps)
+   - Typography (font sizes, weights, line heights)
+   - Corner radius (border-radius)
+   - Elevation/shadows (box-shadow)
     - Icon sizes
-    - Layout structure
+   - Layout structure (flexbox layout)
 
 3. **Translate to Compose Multiplatform:**
-    - Convert Android-specific APIs to KMP equivalents
-    - Use Material3 instead of Material2 where applicable
+   - Convert HTML/CSS to Compose Modifiers
+   - Convert React hooks to Kotlin StateFlow
+   - Convert TypeScript types to Kotlin data classes
     - Maintain visual fidelity
 
 4. **Verify pixel-perfect match:**
@@ -62,48 +69,63 @@ For each component, we will:
 
 ## 🎨 Design System
 
-Based on the local reference files in `docs/Web Version/src/android/`, the design system includes:
+Based on the TypeScript/React components in `docs/Web Version/src/`, the design system includes:
 
-### Colors
-- Primary: Purple shades
-- Secondary: Pink/Teal accents
-- Background: Neutrals
-- Surface: Cards with elevation
-- Error: Red variants
+### Colors (from globals.css)
+
+**Dark Mode (default `:root`):**
+
+- Background: `#0E1729` (dark blue)
+- Card/Surface: `#1E293A` (darker blue)
+- Primary: `#A5D8F3` (light blue)
+- Foreground/Text: `#F9FAFD` (light text)
+- Border: `#3C3C40` (dark gray)
+- Muted: `#334155` (muted gray)
+
+**Light Mode (`.light`):**
+
+- Background: `#FFFFFF` (white)
+- Card/Surface: `#FFFFFF` (white)
+- Primary: `#18181B` (dark/black)
+- Foreground/Text: `#09090B` (very dark text)
+- Border: `#C8C8CD` (light gray)
+- Muted: `#F1F5F9` (light gray background)
 
 ### Typography
 
 - Font family: System default (Roboto on Android)
 - Scale: Material3 type scale
 - Weights: Regular, Medium, Bold
+- Sizes: 12sp, 13sp, 14sp, 15sp, 16sp, 18sp, etc.
 
 ### Spacing
 
 - Base unit: 4dp
-- Common values: 8dp, 12dp, 16dp, 24dp, 32dp
+- Common values: 8dp, 12dp, 16dp, 20dp, 24dp, 32dp
 
 ### Shapes
 
-- Small components: 8dp corner radius
-- Cards: 12dp corner radius
-- Buttons: 24dp (pill shape)
+- Small components: 6dp-8dp corner radius
+- Cards: 8dp-12dp corner radius
+- Buttons: 6dp-8dp corner radius
 
 ### Elevation
 
-- Level 1: 2dp (cards)
-- Level 2: 4dp (FABs)
-- Level 3: 8dp (dialogs)
+- Cards: 0dp (flat) or subtle shadow
+- Hover states: Subtle shadow increase
+- Dialogs: Elevated shadow
 
 ---
 
 ## 📝 Notes
 
-- The local `docs/Web Version/src/android/` folder contains the authoritative design implementation
-- Any discrepancies should be resolved in favor of these reference files
-- Color names and values must exactly match the source
-- Component layouts should be structurally identical
+- The TypeScript/React components in `docs/Web Version/src/` are the authoritative design reference
+- Color names and values must be extracted from the CSS files
+- Component layouts should be structurally identical to the web versions
+- When in doubt, refer to the actual component JSX/TSX code
 
 ---
 
 **Last Updated:** January 2025  
-**Reference Source:** Local files in `docs/Web Version/src/android/`
+**Reference Source:** TypeScript/React components in `docs/Web Version/src/`  
+**Format:** .tsx files with embedded CSS

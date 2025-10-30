@@ -3,7 +3,7 @@
 ## 🎯 Goal
 
 Redesign ALL UI components to **pixel-perfect match** the original AuraFlow POS web app designs
-found in **`docs/Web Version/src/android/`**.
+found in **`docs/Web Version/src/`**.
 
 ---
 
@@ -12,13 +12,12 @@ found in **`docs/Web Version/src/android/`**.
 ### Phase 1: Reference Analysis (NEXT)
 
 1. **Read Original Design Files**
-   - Read: `docs/Web Version/src/android/theme/Color.kt`
-   - Read: `docs/Web Version/src/android/components/ProductCard.kt`
-   - Read: `docs/Web Version/src/android/components/ShoppingCart.kt`
-   - Read: `docs/Web Version/src/android/screens/POSScreen.kt`
+   - Read: `docs/Web Version/src/components/`
+   - Read: `docs/Web Version/src/styles/`
+   - Analyze: Component layouts, spacing, colors, typography
 
 2. **Extract Design Specs**
-   - Document exact color hex values
+   - Document exact color hex values from CSS
    - Note spacing/padding values
    - List typography specifications
    - Capture corner radius values
@@ -34,40 +33,40 @@ Update our theme files to match:
 
 ### Phase 3: Component Redesign
 
-Rebuild components to match local reference files:
+Rebuild components to match TypeScript reference files in `docs/Web Version/src/`:
 
-1. **ProductCard.kt**
+1. **ProductCard.tsx**
    - Match card design exactly
    - Same image aspect ratio
    - Identical text sizes/weights
    - Matching button styles
    - Same hover/press states
 
-2. **CartItemCard.kt**
+2. **CartItem.tsx / CheckoutItems.tsx**
    - Match item layout
    - Same action buttons
    - Identical spacing
    - Matching typography
 
-3. **POSScreen.kt**
+3. **POSView.tsx**
    - Match overall layout structure
    - Same grid/cart split ratio
    - Identical action bar
    - Matching category filters
 
-4. **LoginScreen.kt**
+4. **LoginView.tsx**
    - Match form layout
    - Same input field styles
    - Identical button design
    - Matching branding
 
-5. **CheckoutScreen.kt**
+5. **CheckoutView.tsx**
    - Payment method selection matching web
    - Same keypad layout
    - Identical total display
    - Matching action buttons
 
-6. **OrderHistoryScreen.kt**
+6. **OrderHistoryView.tsx**
    - Match list item design
    - Same filter options
    - Identical status badges
@@ -87,26 +86,26 @@ Rebuild components to match local reference files:
 
 ### Reading Reference Files
 
-We'll read files directly from `docs/Web Version/src/android/`:
+We'll read files directly from `docs/Web Version/src/`:
 
-1. Use file reading tools to access Kotlin files
+1. Use file reading tools to access TypeScript/TSX files
 2. Extract design patterns and specifications
 3. Document measurements and values
-4. Cross-reference with implementation guides
+4. Cross-reference with CSS files
 
 ### Conversion Strategy
 
-**Android → KMP Compose:**
+**TypeScript/React → KMP Compose:**
 ```kotlin
-// Reference file (Android Compose)
-// docs/Web Version/src/android/components/ProductCard.kt
-@Composable
-fun ProductCard(product: Product) {
-    Card(
-        modifier = Modifier.padding(8.dp),
-        elevation = 2.dp,
-        shape = RoundedCornerShape(12.dp)
-    ) { ... }
+// Reference file (TypeScript/React)
+// docs/Web Version/src/components/ProductCard.tsx
+export function ProductCard({ product }: Props) {
+    return (
+        <div className="product-card">
+            <div className="product-info">...</div>
+            <img src={product.image} />
+        </div>
+    )
 }
 
 // Our KMP version (matching design)
@@ -114,24 +113,28 @@ fun ProductCard(product: Product) {
 @Composable
 fun ProductCard(product: Product, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier.padding(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        modifier = modifier,
+        // ... matching dimensions from TypeScript version
     ) { ... }
 }
 ```
 
 ### Key Differences to Handle
 
-1. **Material2 → Material3:**
-   - Card elevation syntax
-   - Button styles
-   - Color system
+1. **HTML/CSS → Compose:**
+   - CSS properties to Compose modifiers
+   - Flexbox to Row/Column layouts
+   - CSS Grid to LazyGrid
 
-2. **Android-specific → KMP:**
-   - Remove Android dependencies
-   - Use expect/actual for platform code
-   - Keep in commonMain
+2. **React → Compose:**
+   - React hooks to Compose state (StateFlow)
+   - Props to Composable parameters
+   - JSX to Compose DSL
+
+3. **TypeScript → Kotlin:**
+   - Type interfaces to data classes
+   - TypeScript generics to Kotlin generics
+   - Async/Promise to Coroutines
 
 ---
 
@@ -139,10 +142,10 @@ fun ProductCard(product: Product, modifier: Modifier = Modifier) {
 
 | Component          | Status           | Notes                                |
 |--------------------|------------------|--------------------------------------|
-| Color.kt           | ❌ Needs update   | Current colors don't match reference |
-| ProductCard        | ❌ Needs redesign | Layout differs from reference        |
-| CartItemCard       | ❌ Needs redesign | Missing features from reference      |
-| POSScreen          | ❌ Needs redesign | Structure doesn't match              |
+| Color.kt           | ⚠️ Partial       | Uses web colors, may need updates    |
+| ProductCard        | ✅ In Progress    | Layout matches web, needs refinement |
+| CartItemCard       | ✅ In Progress    | Layout matches web, needs refinement |
+| POSScreen          | ⚠️ Needs work    | Structure doesn't match web          |
 | LoginScreen        | ❌ Needs redesign | Form layout differs                  |
 | CheckoutScreen     | ⚠️ In progress   | Incomplete, needs reference          |
 | OrderHistoryScreen | ⚠️ In progress   | Incomplete, needs reference          |
@@ -174,9 +177,11 @@ fun ProductCard(product: Product, modifier: Modifier = Modifier) {
 ## 🚀 Ready to Start!
 
 **Next immediate action:**
-I'll read the local reference files in `docs/Web Version/src/android/` to begin matching the designs
+I'll read the TypeScript/React reference files in `docs/Web Version/src/` to begin matching the
+designs
 exactly!
 
-**Reference Location:** `docs/Web Version/src/android/`
+**Reference Location:** `docs/Web Version/src/components/` and `docs/Web Version/src/styles/`
 
 Want me to proceed with Phase 1?
+

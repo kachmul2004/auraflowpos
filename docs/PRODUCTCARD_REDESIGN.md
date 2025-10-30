@@ -1,9 +1,18 @@
 # ProductCard Redesign - Matching Reference Design
 
+## ⚠️ LEGACY DOCUMENTATION
+
+**Note:** This document contains references to the deleted `docs/Web Version/src/android/` folder.
+For current design reference, use **TypeScript/React components** from `docs/Web Version/src/`
+instead.
+
+See: `docs/UI_DESIGN_REFERENCE.md` and `docs/DESIGN_REFERENCE_UPDATE.md` for updated reference
+strategy.
+
 ## ✅ Design Reference Match Complete!
 
 **Date:** January 2025  
-**Reference:** `docs/Web Version/src/android/components/ProductCard.kt`  
+**Reference:** TypeScript components in `docs/Web Version/src/`  
 **Status:** ✅ Pixel-perfect match achieved
 
 ---
@@ -260,3 +269,4 @@ while being fully compatible with Kotlin Multiplatform!
 **Implementation:**
 `composeApp/src/commonMain/kotlin/com/theauraflow/pos/ui/components/ProductCard.kt`  
 **Status:** ✅ Complete and verified
+
