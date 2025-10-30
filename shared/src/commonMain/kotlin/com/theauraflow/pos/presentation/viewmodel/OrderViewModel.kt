@@ -1,5 +1,6 @@
 package com.theauraflow.pos.presentation.viewmodel
 
+import com.theauraflow.pos.core.util.UiText
 import com.theauraflow.pos.domain.model.Order
 import com.theauraflow.pos.domain.model.OrderStatus
 import com.theauraflow.pos.domain.model.PaymentMethod
@@ -28,10 +29,10 @@ class OrderViewModel(
     private val getOrderStatisticsUseCase: GetOrderStatisticsUseCase,
     private val viewModelScope: CoroutineScope
 ) {
-    private val _ordersState = MutableStateFlow<UiState<List<Order>>>(UiState.Loading)
+    private val _ordersState = MutableStateFlow<UiState<List<Order>>>(UiState.Loading())
     val ordersState: StateFlow<UiState<List<Order>>> = _ordersState.asStateFlow()
 
-    private val _statisticsState = MutableStateFlow<UiState<OrderStatistics>>(UiState.Loading)
+    private val _statisticsState = MutableStateFlow<UiState<OrderStatistics>>(UiState.Loading())
     val statisticsState: StateFlow<UiState<OrderStatistics>> = _statisticsState.asStateFlow()
 
     private val _message = MutableStateFlow<String?>(null)
@@ -46,14 +47,16 @@ class OrderViewModel(
      */
     fun loadTodayOrders() {
         viewModelScope.launch(Dispatchers.Default) {
-            _ordersState.value = UiState.Loading
+            _ordersState.value = UiState.Loading()
 
             getTodayOrdersUseCase()
                 .onSuccess { orders ->
                     _ordersState.value = UiState.Success(orders)
                 }
                 .onFailure { error ->
-                    _ordersState.value = UiState.Error(error.message ?: "Failed to load orders")
+                    _ordersState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Failed to load orders")
+                    )
                 }
         }
     }
@@ -65,17 +68,31 @@ class OrderViewModel(
         customerId: String? = null,
         status: OrderStatus? = null,
         startDate: Long? = null,
-        endDate: Long? = null
+        endDate: Long? = null,
+        limit: Int = 50
     ) {
         viewModelScope.launch(Dispatchers.Default) {
-            _ordersState.value = UiState.Loading
+            _ordersState.value = UiState.Loading()
 
-            getOrdersUseCase(customerId, status, startDate, endDate)
-                .onSuccess { orders ->
+            val result = when {
+                customerId != null -> getOrdersUseCase.forCustomer(customerId, limit)
+                status != null -> getOrdersUseCase.byStatus(status, limit)
+                startDate != null && endDate != null -> getOrdersUseCase.forDateRange(
+                    startDate,
+                    endDate,
+                    limit
+                )
+
+                else -> getOrdersUseCase(limit)
+            }
+
+            result.onSuccess { orders ->
                     _ordersState.value = UiState.Success(orders)
                 }
                 .onFailure { error ->
-                    _ordersState.value = UiState.Error(error.message ?: "Failed to load orders")
+                    _ordersState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Failed to load orders")
+                    )
                 }
         }
     }
@@ -117,15 +134,16 @@ class OrderViewModel(
      */
     fun loadStatistics(startDate: Long, endDate: Long) {
         viewModelScope.launch(Dispatchers.Default) {
-            _statisticsState.value = UiState.Loading
+            _statisticsState.value = UiState.Loading()
 
             getOrderStatisticsUseCase(startDate, endDate)
                 .onSuccess { stats ->
                     _statisticsState.value = UiState.Success(stats)
                 }
                 .onFailure { error ->
-                    _statisticsState.value =
-                        UiState.Error(error.message ?: "Failed to load statistics")
+                    _statisticsState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Failed to load statistics")
+                    )
                 }
         }
     }

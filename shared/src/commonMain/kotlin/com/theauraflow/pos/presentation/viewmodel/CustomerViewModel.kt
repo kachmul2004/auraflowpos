@@ -1,5 +1,6 @@
 package com.theauraflow.pos.presentation.viewmodel
 
+import com.theauraflow.pos.core.util.UiText
 import com.theauraflow.pos.domain.model.Customer
 import com.theauraflow.pos.domain.usecase.customer.CreateCustomerUseCase
 import com.theauraflow.pos.domain.usecase.customer.GetCustomerUseCase
@@ -25,14 +26,14 @@ class CustomerViewModel(
     private val getTopCustomersUseCase: GetTopCustomersUseCase,
     private val viewModelScope: CoroutineScope
 ) {
-    private val _customersState = MutableStateFlow<UiState<List<Customer>>>(UiState.Loading)
+    private val _customersState = MutableStateFlow<UiState<List<Customer>>>(UiState.Idle)
     val customersState: StateFlow<UiState<List<Customer>>> = _customersState.asStateFlow()
 
     private val _selectedCustomer = MutableStateFlow<Customer?>(null)
     val selectedCustomer: StateFlow<Customer?> = _selectedCustomer.asStateFlow()
 
-    private val _message = MutableStateFlow<String?>(null)
-    val message: StateFlow<String?> = _message.asStateFlow()
+    private val _message = MutableStateFlow<UiText?>(null)
+    val message: StateFlow<UiText?> = _message.asStateFlow()
 
     /**
      * Search customers by query.
@@ -44,14 +45,16 @@ class CustomerViewModel(
         }
 
         viewModelScope.launch(Dispatchers.Default) {
-            _customersState.value = UiState.Loading
+            _customersState.value = UiState.Loading()
 
             searchCustomersUseCase(query)
                 .onSuccess { customers ->
                     _customersState.value = UiState.Success(customers)
                 }
                 .onFailure { error ->
-                    _customersState.value = UiState.Error(error.message ?: "Search failed")
+                    _customersState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Search failed")
+                    )
                 }
         }
     }
@@ -66,7 +69,8 @@ class CustomerViewModel(
                     _selectedCustomer.value = customer
                 }
                 .onFailure { error ->
-                    _message.value = error.message ?: "Failed to load customer"
+                    _message.value =
+                        UiText.DynamicString(error.message ?: "Failed to load customer")
                 }
         }
     }
@@ -85,11 +89,12 @@ class CustomerViewModel(
         viewModelScope.launch(Dispatchers.Default) {
             createCustomerUseCase(customer)
                 .onSuccess { created ->
-                    _message.value = "Customer created successfully"
+                    _message.value = UiText.DynamicString("Customer created successfully")
                     _selectedCustomer.value = created
                 }
                 .onFailure { error ->
-                    _message.value = error.message ?: "Failed to create customer"
+                    _message.value =
+                        UiText.DynamicString(error.message ?: "Failed to create customer")
                 }
         }
     }
@@ -101,15 +106,18 @@ class CustomerViewModel(
         viewModelScope.launch(Dispatchers.Default) {
             updateLoyaltyPointsUseCase(customerId, pointsDelta)
                 .onSuccess { updated ->
-                    _message.value = if (pointsDelta > 0) {
+                    _message.value = UiText.DynamicString(
+                        if (pointsDelta > 0) {
                         "$pointsDelta points added"
                     } else {
                         "${-pointsDelta} points redeemed"
                     }
+                    )
                     _selectedCustomer.value = updated
                 }
                 .onFailure { error ->
-                    _message.value = error.message ?: "Failed to update points"
+                    _message.value =
+                        UiText.DynamicString(error.message ?: "Failed to update points")
                 }
         }
     }
@@ -119,15 +127,16 @@ class CustomerViewModel(
      */
     fun loadTopCustomers(limit: Int = 10) {
         viewModelScope.launch(Dispatchers.Default) {
-            _customersState.value = UiState.Loading
+            _customersState.value = UiState.Loading()
 
             getTopCustomersUseCase(limit)
                 .onSuccess { customers ->
                     _customersState.value = UiState.Success(customers)
                 }
                 .onFailure { error ->
-                    _customersState.value =
-                        UiState.Error(error.message ?: "Failed to load top customers")
+                    _customersState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Failed to load top customers")
+                    )
                 }
         }
     }

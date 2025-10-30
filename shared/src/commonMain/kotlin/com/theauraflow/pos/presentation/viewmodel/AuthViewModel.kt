@@ -1,5 +1,6 @@
 package com.theauraflow.pos.presentation.viewmodel
 
+import com.theauraflow.pos.core.util.UiText
 import com.theauraflow.pos.domain.model.User
 import com.theauraflow.pos.domain.usecase.auth.LoginUseCase
 import com.theauraflow.pos.domain.usecase.auth.LogoutUseCase
@@ -21,7 +22,7 @@ class AuthViewModel(
     private val refreshTokenUseCase: RefreshTokenUseCase,
     private val viewModelScope: CoroutineScope
 ) {
-    private val _authState = MutableStateFlow<UiState<User>>(UiState.Loading)
+    private val _authState = MutableStateFlow<UiState<User>>(UiState.Idle)
     val authState: StateFlow<UiState<User>> = _authState.asStateFlow()
 
     private val _currentUser = MutableStateFlow<User?>(null)
@@ -35,11 +36,13 @@ class AuthViewModel(
      */
     fun login(email: String, password: String) {
         viewModelScope.launch(Dispatchers.Default) {
-            _authState.value = UiState.Loading
+            _authState.value = UiState.Loading()
 
             // Validate inputs
             if (email.isBlank() || password.isBlank()) {
-                _authState.value = UiState.Error("Email and password are required")
+                _authState.value = UiState.Error(
+                    UiText.DynamicString("Email and password are required")
+                )
                 return@launch
             }
 
@@ -50,7 +53,9 @@ class AuthViewModel(
                     _authState.value = UiState.Success(user)
                 }
                 .onFailure { error ->
-                    _authState.value = UiState.Error(error.message ?: "Login failed")
+                    _authState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Login failed")
+                    )
                 }
         }
     }
@@ -64,13 +69,15 @@ class AuthViewModel(
                 .onSuccess {
                     _currentUser.value = null
                     _isLoggedIn.value = false
-                    _authState.value = UiState.Loading
+                    _authState.value = UiState.Idle
                 }
                 .onFailure { error ->
                     // Still clear local state even if API call fails
                     _currentUser.value = null
                     _isLoggedIn.value = false
-                    _authState.value = UiState.Error(error.message ?: "Logout failed")
+                    _authState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Logout failed")
+                    )
                 }
         }
     }
@@ -93,7 +100,7 @@ class AuthViewModel(
      */
     fun clearError() {
         if (_authState.value is UiState.Error) {
-            _authState.value = UiState.Loading
+            _authState.value = UiState.Idle
         }
     }
 }

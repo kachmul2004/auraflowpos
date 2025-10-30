@@ -1,5 +1,6 @@
 package com.theauraflow.pos.presentation.viewmodel
 
+import com.theauraflow.pos.core.util.UiText
 import com.theauraflow.pos.domain.model.Product
 import com.theauraflow.pos.domain.usecase.product.GetProductsByCategoryUseCase
 import com.theauraflow.pos.domain.usecase.product.GetProductsUseCase
@@ -23,7 +24,7 @@ class ProductViewModel(
     private val getProductsByCategoryUseCase: GetProductsByCategoryUseCase,
     private val viewModelScope: CoroutineScope
 ) {
-    private val _productsState = MutableStateFlow<UiState<List<Product>>>(UiState.Loading)
+    private val _productsState = MutableStateFlow<UiState<List<Product>>>(UiState.Loading())
     val productsState: StateFlow<UiState<List<Product>>> = _productsState.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
@@ -41,14 +42,16 @@ class ProductViewModel(
      */
     fun loadProducts() {
         viewModelScope.launch(Dispatchers.Default) {
-            _productsState.value = UiState.Loading
+            _productsState.value = UiState.Loading()
 
             getProductsUseCase()
                 .onSuccess { products ->
                     _productsState.value = UiState.Success(products)
                 }
                 .onFailure { error ->
-                    _productsState.value = UiState.Error(error.message ?: "Failed to load products")
+                    _productsState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Failed to load products")
+                    )
                 }
         }
     }
@@ -65,14 +68,16 @@ class ProductViewModel(
         }
 
         viewModelScope.launch(Dispatchers.Default) {
-            _productsState.value = UiState.Loading
+            _productsState.value = UiState.Loading()
 
             searchProductsUseCase(query)
                 .onSuccess { products ->
                     _productsState.value = UiState.Success(products)
                 }
                 .onFailure { error ->
-                    _productsState.value = UiState.Error(error.message ?: "Search failed")
+                    _productsState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Search failed")
+                    )
                 }
         }
     }
@@ -89,15 +94,16 @@ class ProductViewModel(
         }
 
         viewModelScope.launch(Dispatchers.Default) {
-            _productsState.value = UiState.Loading
+            _productsState.value = UiState.Loading()
 
             getProductsByCategoryUseCase(categoryId)
                 .onSuccess { products ->
                     _productsState.value = UiState.Success(products)
                 }
                 .onFailure { error ->
-                    _productsState.value =
-                        UiState.Error(error.message ?: "Failed to filter products")
+                    _productsState.value = UiState.Error(
+                        UiText.DynamicString(error.message ?: "Failed to filter products")
+                    )
                 }
         }
     }
