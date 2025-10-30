@@ -1,0 +1,32 @@
+package com.theauraflow.pos.server.database.tables
+
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.kotlin.datetime.datetime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+/**
+ * Products table for inventory management.
+ */
+object ProductsTable : Table("products") {
+    val id = varchar("id", 36)
+    val name = varchar("name", 255)
+    val sku = varchar("sku", 100).uniqueIndex().nullable()
+    val barcode = varchar("barcode", 100).nullable()
+    val price = decimal("price", 10, 2)
+    val cost = decimal("cost", 10, 2).nullable()
+    val categoryId = varchar("category_id", 36).nullable()
+    val stockQuantity = integer("stock_quantity").default(0)
+    val minStockLevel = integer("min_stock_level").default(0)
+    val imageUrl = varchar("image_url", 500).nullable()
+    val description = text("description").nullable()
+    val taxRate = decimal("tax_rate", 5, 2).default(0.toBigDecimal())
+    val isActive = bool("is_active").default(true)
+    val createdAt =
+        datetime("created_at").clientDefault { Clock.System.now().toLocalDateTime(TimeZone.UTC) }
+    val updatedAt =
+        datetime("updated_at").clientDefault { Clock.System.now().toLocalDateTime(TimeZone.UTC) }
+
+    override val primaryKey = PrimaryKey(id)
+}
