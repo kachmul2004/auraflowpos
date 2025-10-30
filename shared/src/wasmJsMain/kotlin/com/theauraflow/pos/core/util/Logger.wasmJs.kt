@@ -5,22 +5,22 @@ package com.theauraflow.pos.core.util
  */
 actual class Logger {
     actual fun debug(tag: String, message: String) {
-        console.log("[$tag] DEBUG: $message")
+        println("[$tag] DEBUG: $message")
     }
 
     actual fun info(tag: String, message: String) {
-        console.info("[$tag] INFO: $message")
+        println("[$tag] INFO: $message")
     }
 
     actual fun warning(tag: String, message: String) {
-        console.warn("[$tag] WARNING: $message")
+        println("[$tag] WARNING: $message")
     }
 
     actual fun error(tag: String, message: String, throwable: Throwable?) {
         if (throwable != null) {
-            console.error("[$tag] ERROR: $message", throwable)
+            println("[$tag] ERROR: $message - ${throwable.message}")
         } else {
-            console.error("[$tag] ERROR: $message")
+            println("[$tag] ERROR: $message")
         }
     }
 }

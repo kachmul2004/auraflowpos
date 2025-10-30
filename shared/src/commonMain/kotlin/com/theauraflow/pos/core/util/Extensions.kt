@@ -18,13 +18,6 @@ fun <T> Flow<T>.asResult(): Flow<Result<T>> {
 }
 
 /**
- * Extension to format double as currency.
- */
-fun Double.toCurrency(currencySymbol: String = "$"): String {
-    return "$currencySymbol%.2f".format(this)
-}
-
-/**
  * Extension to check if string is a valid email.
  */
 fun String.isValidEmail(): Boolean {
