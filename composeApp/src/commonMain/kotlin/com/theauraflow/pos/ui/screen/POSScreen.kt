@@ -11,6 +11,9 @@ import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
 import com.theauraflow.pos.ui.components.ProductGrid
 import com.theauraflow.pos.ui.components.ShoppingCart
+import com.theauraflow.pos.ui.dialog.ReceiptDialog
+import com.theauraflow.pos.domain.model.CartItem
+import kotlin.random.Random
 
 /**
  * Main POS screen with product grid and shopping cart.
@@ -43,6 +46,17 @@ fun POSScreen(
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("All") }
+
+    // Receipt dialog state
+    var showReceiptDialog by remember { mutableStateOf(false) }
+    var completedOrderNumber by remember { mutableStateOf("") }
+    var completedItems by remember { mutableStateOf<List<CartItem>>(emptyList()) }
+    var completedSubtotal by remember { mutableStateOf(0.0) }
+    var completedDiscount by remember { mutableStateOf(0.0) }
+    var completedTax by remember { mutableStateOf(0.0) }
+    var completedTotal by remember { mutableStateOf(0.0) }
+    var completedPaymentMethod by remember { mutableStateOf("") }
+    var completedAmountReceived by remember { mutableStateOf(0.0) }
 
     // Filter products by search query
     val filteredProducts = remember(products, searchQuery) {
@@ -128,14 +142,42 @@ fun POSScreen(
                 cartViewModel.clearCart()
             },
             onCheckout = { paymentMethod, amountReceived ->
-                // TODO: Create order with payment details
-                // For now, just clear the cart to simulate successful payment
+                // Store order details for receipt
+                completedOrderNumber = "ORD-${Random.nextInt(10000, 99999)}"
+                completedItems = cartItems
+                completedSubtotal = subtotal
+                completedDiscount = discount
+                completedTax = tax
+                completedTotal = total
+                completedPaymentMethod = paymentMethod
+                completedAmountReceived = amountReceived
+
+                // Clear cart
                 cartViewModel.clearCart()
-                // Future: Navigate to receipt screen or show success message
+
+                // Show receipt
+                showReceiptDialog = true
             },
             modifier = Modifier
                 .weight(3f)
                 .fillMaxHeight()
         )
     }
+
+    // Receipt Dialog
+    ReceiptDialog(
+        open = showReceiptDialog,
+        orderNumber = completedOrderNumber,
+        items = completedItems,
+        subtotal = completedSubtotal,
+        discount = completedDiscount,
+        tax = completedTax,
+        total = completedTotal,
+        paymentMethod = completedPaymentMethod,
+        amountReceived = completedAmountReceived,
+        onDismiss = { showReceiptDialog = false },
+        onNewOrder = { showReceiptDialog = false },
+        onPrint = { /* TODO: Implement print */ },
+        onEmail = { /* TODO: Implement email */ }
+    )
 }
