@@ -12,11 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.theauraflow.pos.core.util.formatCurrency
+import com.theauraflow.pos.domain.model.CartItem
+import com.theauraflow.pos.presentation.base.UiState
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartUiState
-import com.theauraflow.pos.presentation.viewmodel.OrderViewModel
-import com.theauraflow.pos.presentation.viewmodel.CustomerViewModel
-import com.theauraflow.pos.core.util.formatCurrency
 import com.theauraflow.pos.ui.components.CartItemCard
 
 /**
@@ -33,13 +33,20 @@ import com.theauraflow.pos.ui.components.CartItemCard
 @Composable
 fun CheckoutScreen(
     cartViewModel: CartViewModel,
-    orderViewModel: OrderViewModel,
-    customerViewModel: CustomerViewModel,
     onBack: () -> Unit,
     onOrderComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val cartState by cartViewModel.cartState.collectAsState()
+    val cartUi: CartUiState = when (val s = cartState) {
+        is UiState.Success -> s.data
+        else -> CartUiState()
+    }
+    val items = cartUi.items
+    val subtotal = cartUi.subtotal
+    val tax = cartUi.tax
+    val discount = cartUi.discount
+    val total = cartUi.total
 
     var selectedPaymentMethod by remember { mutableStateOf("cash") }
     var orderNotes by remember { mutableStateOf("") }
@@ -62,212 +69,199 @@ fun CheckoutScreen(
         modifier = modifier
     ) { paddingValues ->
 
-        when (val state = cartState) {
-            is com.theauraflow.pos.presentation.base.UiState.Success -> {
-                val cart = state.data
-
-                if (cart.items.isEmpty()) {
-                    // Empty cart state
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text(
-                                text = "Cart is empty",
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Button(onClick = onBack) {
-                                Text("Go Back")
-                            }
-                        }
-                    }
-                } else {
-                    // Checkout content
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            // Order items section
-                            item {
-                                Text(
-                                    text = "Order Items",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-
-                            items(cart.items) { item ->
-                                CartItemCard(
-                                    cartItem = item,
-                                    onClick = {
-                                        // TODO: Open edit dialog for this item
-                                    }
-                                )
-                            }
-
-                            // Customer section
-                            item {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Customer (Optional)",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                OutlinedCard(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = { /* TODO: Open customer selection */ }
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Person,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-                                            Text("Add Customer")
-                                        }
-                                        Text(
-                                            text = "Optional",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Payment method section
-                            item {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Payment Method",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                PaymentMethodSelector(
-                                    selectedMethod = selectedPaymentMethod,
-                                    onMethodSelected = { selectedPaymentMethod = it }
-                                )
-                            }
-
-                            // Order notes section
-                            item {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Order Notes",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                OutlinedTextField(
-                                    value = orderNotes,
-                                    onValueChange = { orderNotes = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("Add notes (optional)") },
-                                    minLines = 3,
-                                    maxLines = 5
-                                )
-                            }
-
-                            // Order summary section
-                            item {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                OrderSummaryCard(cart = cart)
-                            }
-                        }
-
-                        // Bottom action area
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            tonalElevation = 3.dp
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                // Total amount
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Total Amount",
-                                        style = MaterialTheme.typography.titleLarge
-                                    )
-                                    Text(
-                                        text = "$${cart.total.formatCurrency()}",
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-
-                                // Complete order button
-                                Button(
-                                    onClick = {
-                                        isProcessing = true
-                                        // TODO: Process order
-                                        // orderViewModel.createOrder(...)
-                                        // onOrderComplete()
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    enabled = !isProcessing && cart.items.isNotEmpty()
-                                ) {
-                                    if (isProcessing) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(20.dp),
-                                            color = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    } else {
-                                        Icon(Icons.Default.Check, "Complete")
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Complete Order")
-                                    }
-                                }
-                            }
-                        }
+        if (items.isEmpty()) {
+            // Empty cart state
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Cart is empty",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Button(onClick = onBack) {
+                        Text("Go Back")
                     }
                 }
             }
-
-            else -> {
-                // Loading or error state
-                Box(
+        } else {
+            // Checkout content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    CircularProgressIndicator()
+                    // Order items section
+                    item {
+                        Text(
+                            text = "Order Items",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    items(items) { item ->
+                        CartItemCard(
+                            cartItem = item,
+                            onClick = {
+                                // TODO: Open edit dialog for this item
+                            }
+                        )
+                    }
+
+                    // Customer section
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Customer (Optional)",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { /* TODO: Open customer selection */ }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text("Add Customer")
+                                }
+                                Text(
+                                    text = "Optional",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    // Payment method section
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Payment Method",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        PaymentMethodSelector(
+                            selectedMethod = selectedPaymentMethod,
+                            onMethodSelected = { selectedPaymentMethod = it }
+                        )
+                    }
+
+                    // Order notes section
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Order Notes",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = orderNotes,
+                            onValueChange = { orderNotes = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Add notes (optional)") },
+                            minLines = 3,
+                            maxLines = 5
+                        )
+                    }
+
+                    // Order summary section
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OrderSummaryCard(
+                            items = items,
+                            subtotal = subtotal,
+                            tax = tax,
+                            discount = discount,
+                            total = total
+                        )
+                    }
+                }
+
+                // Bottom action area
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    tonalElevation = 3.dp
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Total amount
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Total Amount",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = "$${total.formatCurrency()}",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        // Complete order button
+                        Button(
+                            onClick = {
+                                isProcessing = true
+                                // TODO: Process order
+                                // onOrderComplete()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isProcessing && items.isNotEmpty()
+                        ) {
+                            if (isProcessing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Icon(Icons.Default.Check, "Complete")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Complete Order")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -329,7 +323,11 @@ private fun PaymentMethodSelector(
 
 @Composable
 private fun OrderSummaryCard(
-    cart: CartUiState,
+    items: List<CartItem>,
+    subtotal: Double,
+    tax: Double,
+    discount: Double,
+    total: Double,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -352,14 +350,14 @@ private fun OrderSummaryCard(
 
             Divider()
 
-            SummaryRow("Items", "${cart.itemCount}")
-            SummaryRow("Subtotal", "$${cart.subtotal.formatCurrency()}")
-            SummaryRow("Tax", "$${cart.tax.formatCurrency()}")
+            SummaryRow("Items", "${items.size}")
+            SummaryRow("Subtotal", "$${subtotal.formatCurrency()}")
+            SummaryRow("Tax", "$${tax.formatCurrency()}")
 
-            if (cart.discount > 0) {
+            if (discount > 0) {
                 SummaryRow(
                     label = "Discount",
-                    value = "-$${cart.discount.formatCurrency()}",
+                    value = "-$${discount.formatCurrency()}",
                     valueColor = MaterialTheme.colorScheme.secondary
                 )
             }
@@ -368,7 +366,7 @@ private fun OrderSummaryCard(
 
             SummaryRow(
                 label = "Total",
-                value = "$${cart.total.formatCurrency()}",
+                value = "$${total.formatCurrency()}",
                 labelStyle = MaterialTheme.typography.titleLarge,
                 valueStyle = MaterialTheme.typography.titleLarge,
                 valueColor = MaterialTheme.colorScheme.primary

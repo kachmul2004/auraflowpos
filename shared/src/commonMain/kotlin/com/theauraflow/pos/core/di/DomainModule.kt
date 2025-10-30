@@ -26,6 +26,7 @@ import com.theauraflow.pos.domain.usecase.product.GetProductsByCategoryUseCase
 import com.theauraflow.pos.domain.usecase.product.GetProductsUseCase
 import com.theauraflow.pos.domain.usecase.product.SearchProductsUseCase
 import com.theauraflow.pos.domain.repository.CartRepository
+import com.theauraflow.pos.presentation.viewmodel.AuthViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
 import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -95,6 +96,15 @@ val domainModule = module {
             getCartTotalsUseCase = get(),
             holdCartUseCase = get(),
             retrieveCartUseCase = get(),
+            viewModelScope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
+    single<AuthViewModel> {
+        AuthViewModel(
+            loginUseCase = get(),
+            logoutUseCase = get(),
+            refreshTokenUseCase = get(),
             viewModelScope = CoroutineScope(Dispatchers.Default)
         )
     }

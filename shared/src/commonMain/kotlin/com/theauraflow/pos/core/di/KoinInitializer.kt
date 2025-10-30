@@ -11,29 +11,12 @@ import org.koin.dsl.KoinAppDeclaration
  * This must be called once at application startup before any dependencies are accessed.
  *
  * Platform-specific implementations should call this in their respective entry points:
- * - **Android**: In `Application.onCreate()`
+ * - **Android**: In `Application.onCreate()` or first Activity before composition
  * - **iOS**: In app delegate or content view
  * - **Desktop**: In `main()` function
  * - **Web**: In `main()` function
- *
- * Example (Android):
- * ```kotlin
- * class MyApplication : Application() {
- *     override fun onCreate() {
- *         super.onCreate()
- *         initKoin()
- *     }
- * }
- * ```
- *
- * Example (iOS):
- * ```kotlin
- * fun MainViewController() {
- *     initKoin()
- *     // ... rest of your code
- * }
- * ```
  */
+// For development+test: Include mockDataModule in DI app startup for all in-memory data
 object KoinInitializer {
 
     /**
@@ -43,10 +26,13 @@ object KoinInitializer {
      */
     fun init(appDeclaration: KoinAppDeclaration? = null) {
         startKoin {
+            // Allow module definitions to be overridden (useful for mocks in dev/testing)
+            allowOverride(true)
+
             // Apply platform-specific configuration if provided
             appDeclaration?.invoke(this)
 
-            // Load all modules
+            // Load all modules (shared appModule already includes network/data/domain)
             modules(getAllModules())
         }
     }
@@ -65,12 +51,7 @@ object KoinInitializer {
      */
     private fun getAllModules(): List<Module> = listOf(
         appModule,
-        networkModule,
-        // TODO: Add more modules as they are created:
-        // databaseModule,
-        // repositoryModule,
-        // useCaseModule,
-        // viewModelModule,
+        // Add other top-level modules here if they are not already included by appModule
     )
 }
 

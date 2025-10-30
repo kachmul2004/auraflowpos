@@ -24,8 +24,9 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    // Pre-filled with development credentials for faster testing
+    var username by remember { mutableStateOf("admin@example.com") }
+    var password by remember { mutableStateOf("password123") }
     var passwordVisible by remember { mutableStateOf(false) }
 
     val authState by authViewModel.authState.collectAsState()
