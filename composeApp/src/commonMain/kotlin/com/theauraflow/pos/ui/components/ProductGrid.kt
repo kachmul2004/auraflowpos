@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.SubcomposeAsyncImage
 import com.theauraflow.pos.domain.model.Product
 
@@ -30,6 +31,8 @@ fun ProductGrid(
     selectedCategory: String = "All",
     onCategoryChange: (String) -> Unit = {},
     onProductClick: (Product) -> Unit = {},
+    searchQuery: String = "",
+    onSearchQueryChange: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var currentPage by remember { mutableStateOf(1) }
@@ -65,28 +68,72 @@ fun ProductGrid(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // Category filters
+        // Search bar (matches web version: hidden lg:block p-4 border-b border-border bg-card)
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 2.dp
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            tonalElevation = 1.dp
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                categories.forEach { category ->
-                    FilterChip(
-                        selected = selectedCategory == category,
-                        onClick = { onCategoryChange(category) },
-                        label = { Text(category) },
-                        leadingIcon = if (selectedCategory == category) {
-                            { Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp)) }
-                        } else null
-                    )
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier.weight(1f).height(36.dp),
+                    placeholder = {
+                        Text(
+                            "Search by name, SKU, or scan barcode...",
+                            fontSize = 12.sp
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+                IconButton(onClick = { /* TODO: Advanced filter */ }) {
+                    Icon(Icons.Default.FilterList, contentDescription = "Filter")
                 }
+            }
+        }
+
+        // Category tabs (horizontal scrollable like web version)
+        ScrollableTabRow(
+            selectedTabIndex = categories.indexOf(selectedCategory).coerceAtLeast(0),
+            modifier = Modifier.fillMaxWidth(),
+            edgePadding = 8.dp,
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            categories.forEach { category ->
+                Tab(
+                    selected = selectedCategory == category,
+                    onClick = { onCategoryChange(category) },
+                    text = {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                getCategoryIconForProduct(category),
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(category, fontSize = 12.sp)
+                        }
+                    }
+                )
             }
         }
 
