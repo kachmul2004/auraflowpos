@@ -119,8 +119,8 @@ fun ShoppingCart(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                        .padding(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
                     // Order Type Selector (matching web ShoppingCart.tsx lines 118-142)
                     var expanded by remember { mutableStateOf(false) }
@@ -129,25 +129,25 @@ fun ShoppingCart(
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
                             onClick = { expanded = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth().height(32.dp),
+                            shape = RoundedCornerShape(6.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = colors.surface,
                                 contentColor = colors.onSurface
                             ),
                             border = BorderStroke(1.dp, colors.outline),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedOrderType, fontSize = 13.sp)
+                                Text(selectedOrderType, fontSize = 12.sp)
                                 Icon(
                                     Icons.Default.ArrowDropDown,
                                     contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
@@ -159,7 +159,7 @@ fun ShoppingCart(
                         ) {
                             listOf("Delivery", "Dine In", "Takeout", "Pickup").forEach { type ->
                                 DropdownMenuItem(
-                                    text = { Text(type, fontSize = 13.sp) },
+                                    text = { Text(type, fontSize = 12.sp) },
                                     onClick = {
                                         selectedOrderType = type
                                         expanded = false
@@ -172,24 +172,25 @@ fun ShoppingCart(
                     // Customer Button
                     OutlinedButton(
                         onClick = { showCustomerDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().height(32.dp),
+                        shape = RoundedCornerShape(6.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = colors.surface,
                             contentColor = colors.onSurface
                         ),
-                        border = BorderStroke(1.dp, colors.outline)
+                        border = BorderStroke(1.dp, colors.outline),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(14.dp),
                             tint = colors.onSurface
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = customerName ?: "Add Customer",
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             modifier = Modifier
                                 .weight(1f)
                                 .wrapContentWidth(Alignment.Start),
@@ -199,16 +200,16 @@ fun ShoppingCart(
                         if (customerName != null) {
                             Surface(
                                 modifier = Modifier
-                                    .padding(start = 8.dp)
-                                    .clip(RoundedCornerShape(4.dp)),
+                                    .padding(start = 6.dp)
+                                    .clip(RoundedCornerShape(3.dp)),
                                 color = colors.secondary,
-                                shape = RoundedCornerShape(4.dp)
+                                shape = RoundedCornerShape(3.dp)
                             ) {
                                 Text(
                                     text = "✓",
-                                    fontSize = 10.sp,
+                                    fontSize = 9.sp,
                                     color = colors.onSecondary,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                                 )
                             }
                         }
@@ -217,24 +218,25 @@ fun ShoppingCart(
                     // Notes Button
                     OutlinedButton(
                         onClick = { showNotesDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().height(32.dp),
+                        shape = RoundedCornerShape(6.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = colors.surface,
                             contentColor = colors.onSurface
                         ),
-                        border = BorderStroke(1.dp, colors.outline)
+                        border = BorderStroke(1.dp, colors.outline),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Icon(
                             Icons.Default.Note,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(14.dp),
                             tint = colors.onSurface
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Order Notes",
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             modifier = Modifier.weight(1f),
                             textAlign = TextAlign.Start
                         )
@@ -253,13 +255,13 @@ fun ShoppingCart(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         Surface(
                             modifier = Modifier
-                                .size(60.dp)
+                                .size(48.dp)
                                 .clip(RoundedCornerShape(50)),
                             color = colors.surfaceVariant,
                             shape = RoundedCornerShape(50)
@@ -269,23 +271,23 @@ fun ShoppingCart(
                                 contentDescription = null,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(14.dp),
+                                    .padding(12.dp),
                                 tint = colors.onSurfaceVariant
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
                             text = "Cart is empty",
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             color = colors.onSurfaceVariant,
                             style = MaterialTheme.typography.titleMedium
                         )
 
                         Text(
                             text = "Add items to start an order",
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             color = colors.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
@@ -293,8 +295,8 @@ fun ShoppingCart(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                            .padding(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
                         items(items) { item ->
                             CartItemButton(
@@ -321,8 +323,8 @@ fun ShoppingCart(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .padding(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     // Subtotal Row
                     Row(
@@ -447,8 +449,8 @@ fun ShoppingCart(
                         // Delete Button (Icon only)
                         OutlinedButton(
                             onClick = onClearCart,
-                            modifier = Modifier.size(40.dp),
-                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.size(32.dp),
+                            shape = RoundedCornerShape(6.dp),
                             contentPadding = PaddingValues(0.dp),
                             enabled = !isCartEmpty,
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -462,7 +464,7 @@ fun ShoppingCart(
                                 )
                             )
                         ) {
-                            Icon(Icons.Default.DeleteForever, null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.DeleteForever, null, modifier = Modifier.size(16.dp))
                         }
 
                         // Park Sale Button
@@ -470,15 +472,15 @@ fun ShoppingCart(
                             onClick = { },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp),
-                            shape = RoundedCornerShape(8.dp),
+                                .height(32.dp),
+                            shape = RoundedCornerShape(6.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = colors.surface,
                                 contentColor = colors.onSurface
                             ),
                             border = BorderStroke(1.dp, colors.outline)
                         ) {
-                            Icon(Icons.Default.Archive, null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Archive, null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Park Sale", fontSize = 12.sp)
                         }
@@ -488,8 +490,8 @@ fun ShoppingCart(
                             onClick = { showPaymentDialog = true },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp),
-                            shape = RoundedCornerShape(8.dp),
+                                .height(32.dp),
+                            shape = RoundedCornerShape(6.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF22C55E),
                                 contentColor = Color.White,
@@ -669,22 +671,23 @@ fun ShoppingCart(
  */
 @Composable
 private fun CartItemButton(
+    modifier: Modifier = Modifier,
     cartItem: CartItem,
     onClick: () -> Unit,
     colors: ColorScheme
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 32.dp)
+            .heightIn(min = 30.dp)
             .clip(RoundedCornerShape(6.dp)),
         shape = RoundedCornerShape(6.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = colors.surface,
             contentColor = colors.onSurface
         ),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+//        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = 0.dp,
             pressedElevation = 1.dp

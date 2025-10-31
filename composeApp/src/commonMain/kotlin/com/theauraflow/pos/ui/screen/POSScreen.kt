@@ -70,6 +70,10 @@ fun POSScreen(
     // Dialog states
     var showReceiptDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
+    var showShiftDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
+    var showKeyboardShortcutsDialog by remember { mutableStateOf(false) }
+    var showEditProfileDialog by remember { mutableStateOf(false) }
 
     // View navigation
     var currentView by remember { mutableStateOf("pos") } // "pos" or "tables"
@@ -151,7 +155,7 @@ fun POSScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -366,13 +370,41 @@ fun POSScreen(
                         )
                     }
 
-                    // User
+                    // User menu with name and avatar (matching web UserProfileDropdown)
                     Box {
-                        IconButton(
+                        Button(
                             onClick = { showUserMenu = !showUserMenu },
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.height(28.dp), // Compact height
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Icon(Icons.Default.AccountCircle, null, modifier = Modifier.size(20.dp))
+                            // Avatar with initials
+                            Surface(
+                                modifier = Modifier.size(20.dp), // Small avatar
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.primary
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Text(
+                                        text = "JC", // John Cashier initials
+                                        fontSize = 9.sp,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "John Cashier",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                         DropdownMenu(
                             expanded = showUserMenu,
@@ -381,15 +413,17 @@ fun POSScreen(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        "John Cashier",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium
+                                        "My Account",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 },
                                 onClick = {},
                                 enabled = false
                             )
                             HorizontalDivider()
+                            // Edit Profile
                             DropdownMenuItem(
                                 text = {
                                     Row(
@@ -401,10 +435,74 @@ fun POSScreen(
                                             null,
                                             modifier = Modifier.size(16.dp)
                                         )
-                                        Text("Edit Profile", fontSize = 13.sp)
+                                        Text("Edit Profile", fontSize = 12.sp)
                                     }
                                 },
-                                onClick = { showUserMenu = false }
+                                onClick = {
+                                    showEditProfileDialog = true
+                                    showUserMenu = false
+                                }
+                            )
+                            HorizontalDivider()
+                            // Shift Status
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Schedule,
+                                            null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text("Shift Status", fontSize = 12.sp)
+                                    }
+                                },
+                                onClick = {
+                                    showShiftDialog = true
+                                    showUserMenu = false
+                                }
+                            )
+                            // Settings
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Settings,
+                                            null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text("Settings", fontSize = 12.sp)
+                                    }
+                                },
+                                onClick = {
+                                    showSettingsDialog = true
+                                    showUserMenu = false
+                                }
+                            )
+                            // Keyboard Shortcuts
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Keyboard,
+                                            null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text("Keyboard Shortcuts", fontSize = 12.sp)
+                                    }
+                                },
+                                onClick = {
+                                    showKeyboardShortcutsDialog = true
+                                    showUserMenu = false
+                                }
                             )
                         }
                     }
@@ -522,47 +620,104 @@ fun POSScreen(
     if (showHelpDialog) {
         HelpDialog(onDismiss = { showHelpDialog = false })
     }
-}
 
-@Composable
-fun TableManagementScreen(
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            ) { onBack() }
-    ) {
-        // Compact Top Bar - matches screenshot exactly
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 2.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Left: Back button
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(Icons.Default.ArrowBack, null, modifier = Modifier.size(18.dp))
+    // Edit Profile Dialog (placeholder)
+    if (showEditProfileDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditProfileDialog = false },
+            title = { Text("Edit Profile") },
+            text = { Text("Edit profile functionality coming soon") },
+            confirmButton = {
+                TextButton(onClick = { showEditProfileDialog = false }) {
+                    Text("Close")
                 }
             }
-        }
+        )
+    }
 
-        // Main content
-        Row(modifier = Modifier.fillMaxSize().weight(1f)) {
-            // Add table management content here
-        }
+    // Shift Status Dialog (placeholder)
+    if (showShiftDialog) {
+        AlertDialog(
+            onDismissRequest = { showShiftDialog = false },
+            title = { Text("Shift Status") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Current Shift Information", fontWeight = FontWeight.Bold)
+                    Text("Terminal: T#1")
+                    Text("Clocked In: 09:00 AM")
+                    Text("Total Orders: 0")
+                    Text("Total Sales: $0.00")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showShiftDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    // Settings Dialog (placeholder)
+    if (showSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showSettingsDialog = false },
+            title = { Text("Settings") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Auto-Print Receipts")
+                        Switch(checked = false, onCheckedChange = {})
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Sound Effects")
+                        Switch(checked = true, onCheckedChange = {})
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSettingsDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    // Keyboard Shortcuts Dialog (placeholder)
+    if (showKeyboardShortcutsDialog) {
+        AlertDialog(
+            onDismissRequest = { showKeyboardShortcutsDialog = false },
+            title = { Text("Keyboard Shortcuts") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text("General Shortcuts:", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text("F1 - Show keyboard shortcuts", fontSize = 11.sp)
+                    Text("F2 - Quick payment (Cash)", fontSize = 11.sp)
+                    Text("F3 - Search products", fontSize = 11.sp)
+                    Text("F11 - Toggle fullscreen", fontSize = 11.sp)
+                    Text("Ctrl+L - Lock screen", fontSize = 11.sp)
+                    Text("Ctrl+N - New order / Clear cart", fontSize = 11.sp)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showKeyboardShortcutsDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }
+

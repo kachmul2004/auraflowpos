@@ -219,31 +219,51 @@ fun ProductGrid(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
+                // Previous button - circular
+                FilledIconButton(
                     onClick = { currentPage = maxOf(1, currentPage - 1) },
-                    enabled = currentPage > 1
+                    enabled = currentPage > 1,
+                    modifier = Modifier.size(28.dp), // Compact circular button
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
-                    Icon(Icons.Default.ChevronLeft, "Previous page")
+                    Icon(
+                        Icons.Default.ChevronLeft,
+                        contentDescription = "Previous page",
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
                     text = "$currentPage / ${maxOf(1, totalPages)}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp)
                 )
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-                IconButton(
+                // Next button - circular
+                FilledIconButton(
                     onClick = { currentPage = minOf(totalPages, currentPage + 1) },
-                    enabled = currentPage < totalPages
+                    enabled = currentPage < totalPages,
+                    modifier = Modifier.size(28.dp), // Compact circular button
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
-                    Icon(Icons.Default.ChevronRight, "Next page")
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = "Next page",
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }
