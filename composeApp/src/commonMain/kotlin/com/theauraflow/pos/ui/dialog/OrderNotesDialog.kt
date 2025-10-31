@@ -43,7 +43,7 @@ fun OrderNotesDialog(
         ) {
             Surface(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
+                    .width(448.dp)
                     .wrapContentHeight(),
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface,

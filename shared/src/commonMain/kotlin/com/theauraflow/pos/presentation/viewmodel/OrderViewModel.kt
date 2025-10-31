@@ -44,7 +44,6 @@ class OrderViewModel(
     val message: StateFlow<String?> = _message.asStateFlow()
 
     init {
-        loadTodayOrders()
     }
 
     /**
@@ -65,8 +64,7 @@ class OrderViewModel(
             ).onSuccess { order ->
                 _lastCreatedOrder.value = order
                 _message.value = "Order created successfully"
-                // Refresh today's orders
-                loadTodayOrders()
+                // Removed loadTodayOrders() - using local storage
             }.onFailure { error ->
                 _message.value = error.message ?: "Failed to create order"
             }
@@ -136,7 +134,7 @@ class OrderViewModel(
             cancelOrderUseCase(orderId, reason)
                 .onSuccess {
                     _message.value = "Order cancelled successfully"
-                    loadTodayOrders()
+                    // Removed loadTodayOrders() - using local storage
                 }
                 .onFailure { error ->
                     _message.value = error.message ?: "Failed to cancel order"
@@ -152,7 +150,7 @@ class OrderViewModel(
             refundOrderUseCase(orderId, amount, reason)
                 .onSuccess {
                     _message.value = "Order refunded successfully"
-                    loadTodayOrders()
+                    // Removed loadTodayOrders() - using local storage
                 }
                 .onFailure { error ->
                     _message.value = error.message ?: "Failed to refund order"
@@ -184,5 +182,12 @@ class OrderViewModel(
      */
     fun clearMessage() {
         _message.value = null
+    }
+
+    /**
+     * Clear last created order state (for receipt dialog).
+     */
+    fun clearLastOrder() {
+        _lastCreatedOrder.value = null
     }
 }

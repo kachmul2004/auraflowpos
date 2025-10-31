@@ -88,21 +88,19 @@ fun POSScreen(
         }
     }
 
-    // Watch for newly created orders
+    // Watch for newly created orders to update order number
     LaunchedEffect(lastCreatedOrder) {
         lastCreatedOrder?.let { order ->
-            // Update receipt with actual order data
+            // Update order number with the real one from database
             completedOrderNumber = order.orderNumber
-            completedItems = order.items
-            completedSubtotal = order.subtotal
-            completedDiscount = order.discount
-            completedTax = order.tax
-            completedTotal = order.total
-            completedPaymentMethod = order.paymentMethod.name
-            // Note: amountReceived is still from the payment dialog
-            // We could add it to Order model in future
+        }
+    }
 
-            showReceiptDialog = true
+    LaunchedEffect(showReceiptDialog) {
+        if (!showReceiptDialog) {
+            orderViewModel.clearLastOrder()
+            orderNotes = ""
+            customerViewModel.clearSelection()
         }
     }
 
@@ -201,19 +199,34 @@ fun POSScreen(
                     else -> PaymentMethod.OTHER
                 }
 
-                // Store amount received for receipt (before cart is cleared)
+                // Capture current cart state before clearing
+                completedItems = cartItems.toList()
+                completedSubtotal = subtotal
+                completedDiscount = discount
+                completedTax = tax
+                completedTotal = total
+                completedPaymentMethod = paymentMethodString
                 completedAmountReceived = amountReceived
 
                 // Create order via OrderViewModel
                 orderViewModel.createOrder(
-                    customerId = selectedCustomer?.id, // Get from customer selection
+                    customerId = selectedCustomer?.id,
                     paymentMethod = paymentMethod,
                     amountPaid = if (paymentMethod == PaymentMethod.CASH) amountReceived else null,
                     notes = orderNotes
                 )
 
-                // Cart will be cleared automatically by CreateOrderUseCase
-                // Receipt will be shown automatically by LaunchedEffect watching lastCreatedOrder
+                // Clear cart explicitly
+                cartViewModel.clearCart()
+
+                // Show receipt immediately
+                // Generate a temporary order number (will be replaced when real order comes through)
+                completedOrderNumber = "ORD-${kotlin.random.Random.nextInt(10000, 99999)}"
+                showReceiptDialog = true
+
+                // Clear order notes and customer selection
+                orderNotes = ""
+                customerViewModel.clearSelection()
             },
             modifier = Modifier
                 .weight(3f)

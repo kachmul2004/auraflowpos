@@ -69,8 +69,8 @@ fun CustomerSelectionDialog(
         ) {
             Surface(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .fillMaxHeight(0.9f),
+                    .width(672.dp)
+                    .heightIn(max = 650.dp),
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 8.dp

@@ -69,7 +69,7 @@ fun PaymentDialog(
         ) {
             Surface(
                 modifier = modifier
-                    .fillMaxWidth(0.85f)
+                    .width(448.dp)
                     .wrapContentHeight(),
                 shape = MaterialTheme.shapes.large,
                 tonalElevation = 6.dp
@@ -314,7 +314,7 @@ private fun CashPaymentContent(
                     }
                 }
                 OutlinedButton(
-                    onClick = { onAmountChange(total.formatPrice()) },
+                    onClick = { onAmountChange(total.toString()) },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Exact")

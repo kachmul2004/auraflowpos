@@ -56,8 +56,8 @@ fun EditCartItemDialog(
     ) {
         Surface(
             modifier = modifier
-                .fillMaxWidth(0.9f)
-                .fillMaxHeight(0.8f),
+                .width(900.dp)
+                .heightIn(max = 650.dp),
             shape = MaterialTheme.shapes.large,
             tonalElevation = 6.dp
         ) {
