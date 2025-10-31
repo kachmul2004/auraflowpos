@@ -1,6 +1,8 @@
 package com.theauraflow.pos.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -15,6 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,6 +43,7 @@ fun ProductGrid(
 ) {
     var currentPage by remember { mutableStateOf(1) }
     val itemsPerPage = 25 // 5 columns × 5 rows
+    val focusManager = LocalFocusManager.current
 
     // Extract unique categories from products
     val categories = remember(products) {
@@ -66,23 +73,33 @@ fun ProductGrid(
     }
 
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { focusManager.clearFocus() }
     ) {
         // Search bar (matches web version: hidden lg:block p-4 border-b border-border bg-card)
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { /* Consume click to prevent clearing focus */ },
             color = MaterialTheme.colorScheme.surfaceVariant,
             tonalElevation = 1.dp
         ) {
             Row(
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = onSearchQueryChange,
-                    modifier = Modifier.weight(1f).height(36.dp),
+                    modifier = Modifier.weight(1f),
                     placeholder = {
                         Text(
                             "Search by name, SKU, or scan barcode...",
@@ -101,18 +118,26 @@ fun ProductGrid(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     ),
-                    textStyle = MaterialTheme.typography.bodyMedium
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Search
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = { focusManager.clearFocus() }
+                    )
                 )
-                IconButton(onClick = { /* TODO: Advanced filter */ }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filter")
-                }
             }
         }
 
         // Category tabs (horizontal scrollable like web version)
         ScrollableTabRow(
             selectedTabIndex = categories.indexOf(selectedCategory).coerceAtLeast(0),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { focusManager.clearFocus() },
             edgePadding = 8.dp,
             containerColor = MaterialTheme.colorScheme.surface
         ) {
@@ -144,6 +169,10 @@ fun ProductGrid(
                 .fillMaxWidth()
                 .background(Color(0xFFD9D9D9)) // Matches web: style={{ backgroundColor: '#D9D9D9' }}
                 .padding(12.dp)
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { focusManager.clearFocus() }
         ) {
             // Calculate item size to fit exactly 5 rows in available height
             // Web uses: grid-rows-[repeat(5,1fr)] which divides height equally
@@ -178,14 +207,19 @@ fun ProductGrid(
 
         // Pagination controls
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { focusManager.clearFocus() },
             color = MaterialTheme.colorScheme.surface,
             shadowElevation = 2.dp
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {

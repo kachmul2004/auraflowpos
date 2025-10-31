@@ -1,16 +1,21 @@
 package com.theauraflow.pos.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,7 +70,9 @@ fun POSScreen(
     // Dialog states
     var showReceiptDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
-    var showTablesDialog by remember { mutableStateOf(false) }
+
+    // View navigation
+    var currentView by remember { mutableStateOf("pos") } // "pos" or "tables"
 
     // Top bar states
     var isTrainingMode by remember { mutableStateOf(false) }
@@ -116,7 +123,25 @@ fun POSScreen(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    val focusManager = LocalFocusManager.current
+
+    // Show Table Management screen if selected
+    if (currentView == "tables") {
+        TableManagementScreen(
+            onBack = { currentView = "pos" }
+        )
+        return
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .clickable(
+                // Dismiss keyboard when touched anywhere except child clickable elements
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { focusManager.clearFocus() }
+    ) {
         // Compact Top Bar - matches screenshot exactly
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -200,6 +225,37 @@ fun POSScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+
+                    // Training mode badge
+                    if (isTrainingMode) {
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            color = Color(0xFFF59E0B).copy(alpha = 0.2f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                Color(0xFFF59E0B).copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.School,
+                                    contentDescription = null,
+                                    tint = Color(0xFFF59E0B),
+                                    modifier = Modifier.size(10.dp)
+                                )
+                                Text(
+                                    text = "Training",
+                                    fontSize = 9.sp,
+                                    color = Color(0xFFF59E0B),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // Center: Online indicator
@@ -220,40 +276,70 @@ fun POSScreen(
                         Text("Help", fontSize = 11.sp)
                     }
 
-                    // Training toggle
-                    Text(
-                        "Training",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Switch(
-                        checked = isTrainingMode,
-                        onCheckedChange = { isTrainingMode = it },
-                        modifier = Modifier.height(20.dp)
-                    )
-
-                    // Tables
-                    OutlinedButton(
-                        onClick = { showTablesDialog = true },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    // Training toggle (Switch FIRST, then Label - matching web line 440-447)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(Icons.Default.TableChart, null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Tables", fontSize = 11.sp)
+                        Switch(
+                            checked = isTrainingMode,
+                            onCheckedChange = {
+                                isTrainingMode = it
+                                // TODO: Show badge in top left when enabled
+                            },
+                            modifier = Modifier
+                                .height(20.dp)
+                                .scale(0.8f) // Scale down the switch to make it smaller
+                        )
+                        Text(
+                            "Training",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
 
-                    // Admin
-                    OutlinedButton(
-                        onClick = { /* TODO */ },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    // Tables - same style as Standard View badge
+                    Surface(
+                        onClick = { currentView = "tables" }, // Navigate to full screen
+                        shape = MaterialTheme.shapes.small,
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline
+                        ),
+                        color = MaterialTheme.colorScheme.surface
                     ) {
-                        Icon(
-                            Icons.Default.AdminPanelSettings,
-                            null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text("Admin", fontSize = 11.sp)
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.TableChart, null, modifier = Modifier.size(12.dp))
+                            Text("Tables", fontSize = 11.sp)
+                        }
+                    }
+
+                    // Admin - same style as Standard View badge
+                    Surface(
+                        onClick = { /* TODO */ },
+                        shape = MaterialTheme.shapes.small,
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline
+                        ),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.AdminPanelSettings,
+                                null,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text("Admin", fontSize = 11.sp)
+                        }
                     }
 
                     // Fullscreen
@@ -328,82 +414,91 @@ fun POSScreen(
 
         // Main content
         Row(modifier = Modifier.fillMaxSize().weight(1f)) {
-            // Left: Product area
-            Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                // Product grid with search and categories (search is part of ProductGrid per web version)
-                ProductGrid(
-                    products = filteredProducts,
-                    selectedCategory = selectedCategory,
-                    onCategoryChange = { selectedCategory = it },
-                    onProductClick = { product -> cartViewModel.addToCart(product) },
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    searchQuery = searchQuery,
-                    onSearchQueryChange = { searchQuery = it }
-                )
+            when (currentView) {
+                "pos" -> {
+                    // Left: Product area
+                    Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        // Product grid with search and categories (search is part of ProductGrid per web version)
+                        ProductGrid(
+                            products = filteredProducts,
+                            selectedCategory = selectedCategory,
+                            onCategoryChange = { selectedCategory = it },
+                            onProductClick = { product -> cartViewModel.addToCart(product) },
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            searchQuery = searchQuery,
+                            onSearchQueryChange = { searchQuery = it }
+                        )
 
-                // Action bar
-                ActionBar(
-                    onClockOut = { /* TODO */ },
-                    onLock = { /* TODO */ },
-                    onCashDrawer = { /* TODO */ },
-                    onTransactions = { /* TODO */ },
-                    onReturns = { /* TODO */ },
-                    onOrders = { /* TODO */ }
-                )
-            }
+                        // Action bar
+                        ActionBar(
+                            onClockOut = { /* TODO */ },
+                            onLock = { /* TODO */ },
+                            onCashDrawer = { /* TODO */ },
+                            onTransactions = { /* TODO */ },
+                            onReturns = { /* TODO */ },
+                            onOrders = { /* TODO */ }
+                        )
+                    }
 
-            // Right: Cart sidebar (384dp width)
-            ShoppingCart(
-                items = cartItems,
-                subtotal = subtotal,
-                tax = tax,
-                discount = discount,
-                total = total,
-                customers = customers,
-                selectedCustomer = selectedCustomer,
-                onSelectCustomer = { customer ->
-                    if (customer != null) {
-                        customerViewModel.selectCustomer(customer.id)
-                    } else {
-                        customerViewModel.clearSelection()
-                    }
-                },
-                orderNotes = orderNotes,
-                onSaveNotes = { notes -> orderNotes = notes },
-                onUpdateItem = { cartItem, newQuantity, itemDiscount, priceOverride ->
-                    if (newQuantity != cartItem.quantity) {
-                        cartViewModel.updateQuantity(cartItem.id, newQuantity)
-                    }
-                },
-                onVoidItem = { cartItem -> cartViewModel.removeFromCart(cartItem.id) },
-                onClearCart = { cartViewModel.clearCart() },
-                onCheckout = { paymentMethodString, amountReceived ->
-                    val paymentMethod = when (paymentMethodString.lowercase()) {
-                        "cash" -> PaymentMethod.CASH
-                        "card" -> PaymentMethod.CARD
-                        else -> PaymentMethod.OTHER
-                    }
-                    completedItems = cartItems.toList()
-                    completedSubtotal = subtotal
-                    completedDiscount = discount
-                    completedTax = tax
-                    completedTotal = total
-                    completedPaymentMethod = paymentMethodString
-                    completedAmountReceived = amountReceived
-                    orderViewModel.createOrder(
-                        customerId = selectedCustomer?.id,
-                        paymentMethod = paymentMethod,
-                        amountPaid = if (paymentMethod == PaymentMethod.CASH) amountReceived else null,
-                        notes = orderNotes
+                    // Right: Cart sidebar (384dp width)
+                    ShoppingCart(
+                        items = cartItems,
+                        subtotal = subtotal,
+                        tax = tax,
+                        discount = discount,
+                        total = total,
+                        customers = customers,
+                        selectedCustomer = selectedCustomer,
+                        onSelectCustomer = { customer ->
+                            if (customer != null) {
+                                customerViewModel.selectCustomer(customer.id)
+                            } else {
+                                customerViewModel.clearSelection()
+                            }
+                        },
+                        orderNotes = orderNotes,
+                        onSaveNotes = { notes -> orderNotes = notes },
+                        onUpdateItem = { cartItem, newQuantity, itemDiscount, priceOverride ->
+                            if (newQuantity != cartItem.quantity) {
+                                cartViewModel.updateQuantity(cartItem.id, newQuantity)
+                            }
+                        },
+                        onVoidItem = { cartItem -> cartViewModel.removeFromCart(cartItem.id) },
+                        onClearCart = { cartViewModel.clearCart() },
+                        onCheckout = { paymentMethodString, amountReceived ->
+                            val paymentMethod = when (paymentMethodString.lowercase()) {
+                                "cash" -> PaymentMethod.CASH
+                                "card" -> PaymentMethod.CARD
+                                else -> PaymentMethod.OTHER
+                            }
+                            completedItems = cartItems.toList()
+                            completedSubtotal = subtotal
+                            completedDiscount = discount
+                            completedTax = tax
+                            completedTotal = total
+                            completedPaymentMethod = paymentMethodString
+                            completedAmountReceived = amountReceived
+                            orderViewModel.createOrder(
+                                customerId = selectedCustomer?.id,
+                                paymentMethod = paymentMethod,
+                                amountPaid = if (paymentMethod == PaymentMethod.CASH) amountReceived else null,
+                                notes = orderNotes
+                            )
+                            cartViewModel.clearCart()
+                            completedOrderNumber =
+                                "ORD-${kotlin.random.Random.nextInt(10000, 99999)}"
+                            showReceiptDialog = true
+                            orderNotes = ""
+                            customerViewModel.clearSelection()
+                        },
+                        modifier = Modifier.width(384.dp).fillMaxHeight()
                     )
-                    cartViewModel.clearCart()
-                    completedOrderNumber = "ORD-${kotlin.random.Random.nextInt(10000, 99999)}"
-                    showReceiptDialog = true
-                    orderNotes = ""
-                    customerViewModel.clearSelection()
-                },
-                modifier = Modifier.width(384.dp).fillMaxHeight()
-            )
+                }
+
+                "tables" -> {
+                    // TableManagementScreen is now rendered above in the early return block.
+                }
+            }
         }
     }
 
@@ -427,8 +522,47 @@ fun POSScreen(
     if (showHelpDialog) {
         HelpDialog(onDismiss = { showHelpDialog = false })
     }
+}
 
-    if (showTablesDialog) {
-        TablesDialog(onDismiss = { showTablesDialog = false })
+@Composable
+fun TableManagementScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onBack() }
+    ) {
+        // Compact Top Bar - matches screenshot exactly
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 2.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Left: Back button
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.ArrowBack, null, modifier = Modifier.size(18.dp))
+                }
+            }
+        }
+
+        // Main content
+        Row(modifier = Modifier.fillMaxSize().weight(1f)) {
+            // Add table management content here
+        }
     }
 }

@@ -24,6 +24,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -119,8 +120,55 @@ fun ShoppingCart(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
+                    // Order Type Selector (matching web ShoppingCart.tsx lines 118-142)
+                    var expanded by remember { mutableStateOf(false) }
+                    var selectedOrderType by remember { mutableStateOf("Pickup") } // Changed default to Pickup
+
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { expanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = colors.surface,
+                                contentColor = colors.onSurface
+                            ),
+                            border = BorderStroke(1.dp, colors.outline),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedOrderType, fontSize = 13.sp)
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            listOf("Delivery", "Dine In", "Takeout", "Pickup").forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type, fontSize = 13.sp) },
+                                    onClick = {
+                                        selectedOrderType = type
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
                     // Customer Button
                     OutlinedButton(
                         onClick = { showCustomerDialog = true },
@@ -274,7 +322,7 @@ fun ShoppingCart(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     // Subtotal Row
                     Row(
@@ -629,24 +677,24 @@ private fun CartItemButton(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, colors.outline, RoundedCornerShape(8.dp)),
-        shape = RoundedCornerShape(8.dp),
+            .heightIn(min = 32.dp)
+            .clip(RoundedCornerShape(6.dp)),
+        shape = RoundedCornerShape(6.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = colors.surface,
             contentColor = colors.onSurface
         ),
-        contentPadding = PaddingValues(10.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = 0.dp,
-            pressedElevation = 2.dp
-        )
+            pressedElevation = 1.dp
+        ),
+        border = BorderStroke(1.dp, colors.outline)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             // Top row: quantity × name ........... price
             Row(
@@ -656,17 +704,17 @@ private fun CartItemButton(
             ) {
                 Row(
                     modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "${cartItem.quantity}×",
-                        fontSize = 12.sp,
+                        fontSize = 10.sp,
                         color = colors.onSurfaceVariant
                     )
                     Text(
                         text = cartItem.product.name,
-                        fontSize = 12.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -677,7 +725,7 @@ private fun CartItemButton(
                         cartItem.modifiers.fold(cartItem.product.price * cartItem.quantity) { sum, mod -> sum + (mod.price ?: 0.0) }
                             .formatCurrency()
                     }",
-                    fontSize = 12.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -687,14 +735,13 @@ private fun CartItemButton(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .paddingFromBaseline(top = 2.dp)
-                        .padding(start = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                        .padding(start = 12.dp, top = 1.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.5.dp)
                 ) {
                     cartItem.modifiers.forEach { modifier ->
                         Text(
                             text = "+ ${modifier.name}${if ((modifier.price ?: 0.0) > 0) " (+$${modifier.price.formatCurrency()})" else ""}",
-                            fontSize = 10.sp,
+                            fontSize = 8.sp,
                             color = colors.onSurfaceVariant
                         )
                     }
