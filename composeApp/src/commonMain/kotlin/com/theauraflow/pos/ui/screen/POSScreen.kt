@@ -34,8 +34,15 @@ import com.theauraflow.pos.ui.dialog.EditProfileDialog
 import com.theauraflow.pos.ui.dialog.ShiftStatusDialog
 import com.theauraflow.pos.ui.dialog.QuickSettingsDialog
 import com.theauraflow.pos.ui.dialog.KeyboardShortcutsDialog
+import com.theauraflow.pos.ui.components.CashDrawerDialog
+import com.theauraflow.pos.ui.components.ParkedSalesDialog
+import com.theauraflow.pos.ui.components.ParkedSale
 import com.theauraflow.pos.domain.model.CartItem
 import com.theauraflow.pos.domain.model.PaymentMethod
+
+// Import new screens for view navigation
+import com.theauraflow.pos.ui.screen.TransactionsScreen
+import com.theauraflow.pos.ui.screen.ReturnsScreen
 
 /**
  * Main POS screen matching the exact web version layout.
@@ -75,19 +82,20 @@ fun POSScreen(
     var selectedCategory by remember { mutableStateOf("All") }
 
     // Dialog states
+    var showClockInDialog by remember { mutableStateOf(true) }
+    var shiftStarted by remember { mutableStateOf(false) }
     var showReceiptDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
     var showShiftDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showKeyboardShortcutsDialog by remember { mutableStateOf(false) }
     var showEditProfileDialog by remember { mutableStateOf(false) }
-
-    // Clock In dialog state - shows on first load before shift starts
-    var showClockInDialog by remember { mutableStateOf(true) }
-    var shiftStarted by remember { mutableStateOf(false) }
+    var showCashDrawerDialog by remember { mutableStateOf(false) }
+    var showLockScreen by remember { mutableStateOf(false) }
+    var showParkedSalesDialog by remember { mutableStateOf(false) }
 
     // View navigation
-    var currentView by remember { mutableStateOf("pos") } // "pos" or "tables"
+    var currentView by remember { mutableStateOf("pos") } // "pos", "tables", "transactions", "returns"
 
     // Top bar states
     var isTrainingMode by remember { mutableStateOf(false) }
@@ -143,6 +151,26 @@ fun POSScreen(
     if (currentView == "tables") {
         TableManagementScreen(
             onBack = { currentView = "pos" }
+        )
+        return
+    }
+    // Show Transactions screen if selected
+    if (currentView == "transactions") {
+        TransactionsScreen(
+            transactions = emptyList(), // TODO: Get from shift data
+            onBack = { currentView = "pos" }
+        )
+        return
+    }
+    // Show Returns screen if selected
+    if (currentView == "returns") {
+        ReturnsScreen(
+            orders = emptyList(), // TODO: Get from order history
+            onBack = { currentView = "pos" },
+            onProcessReturn = { orderId, itemIds, reason ->
+                // TODO: Process return
+                println("Processing return for order $orderId")
+            }
         )
         return
     }
@@ -569,12 +597,12 @@ fun POSScreen(
 
                         // Action bar
                         ActionBar(
-                            onClockOut = { /* TODO */ },
-                            onLock = { /* TODO */ },
-                            onCashDrawer = { /* TODO */ },
-                            onTransactions = { /* TODO */ },
-                            onReturns = { /* TODO */ },
-                            onOrders = { /* TODO */ }
+                            onClockOut = { showShiftDialog = true },
+                            onLock = { showLockScreen = true },
+                            onCashDrawer = { showCashDrawerDialog = true },
+                            onTransactions = { currentView = "transactions" },
+                            onReturns = { currentView = "returns" },
+                            onOrders = { showParkedSalesDialog = true }
                         )
                     }
 
@@ -635,6 +663,14 @@ fun POSScreen(
 
                 "tables" -> {
                     // TableManagementScreen is now rendered above in the early return block.
+                }
+
+                "transactions" -> {
+                    // TransactionsScreen is rendered above in the early return block.
+                }
+
+                "returns" -> {
+                    // ReturnsScreen is rendered above in the early return block.
                 }
             }
         }
@@ -707,6 +743,48 @@ fun POSScreen(
             onDismiss = { showKeyboardShortcutsDialog = false }
         )
     }
+
+    // Cash Drawer Dialog
+    CashDrawerDialog(
+        open = showCashDrawerDialog,
+        currentBalance = 100.0, // TODO: Get from shift data
+        isDarkTheme = isDarkTheme,
+        onClose = { showCashDrawerDialog = false },
+        onConfirm = { type, amount, reason ->
+            // TODO: Record cash transaction
+            println("Cash $type: $$amount - $reason")
+            showCashDrawerDialog = false
+        }
+    )
+
+    // Lock Screen
+    LockScreen(
+        open = showLockScreen,
+        userPin = "123456", // TODO: Get from user data
+        userName = "John Cashier",
+        onUnlock = { showLockScreen = false }
+    )
+
+    // Parked Sales Dialog
+    ParkedSalesDialog(
+        open = showParkedSalesDialog,
+        parkedSales = emptyList(), // TODO: Get from state
+        currentCartHasItems = cartItems.isNotEmpty(),
+        onClose = { showParkedSalesDialog = false },
+        onParkCurrent = {
+            // TODO: Park current cart
+            println("Parking current sale")
+            showParkedSalesDialog = false
+        },
+        onLoadSale = { saleId ->
+            // TODO: Load parked sale
+            println("Loading sale: $saleId")
+        },
+        onDeleteSale = { saleId ->
+            // TODO: Delete parked sale
+            println("Deleting sale: $saleId")
+        }
+    )
 }
 
 /**
