@@ -39,6 +39,7 @@ fun ProductGrid(
     onProductClick: (Product) -> Unit = {},
     searchQuery: String = "",
     onSearchQueryChange: (String) -> Unit = {},
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var currentPage by remember { mutableStateOf(1) }
@@ -159,12 +160,14 @@ fun ProductGrid(
             }
         }
 
-        // Product grid with gray background matching web design
+        // Product grid with background color based on theme
         BoxWithConstraints(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .background(Color(0xFFD9D9D9)) // Matches web: style={{ backgroundColor: '#D9D9D9' }}
+                .background(
+                    if (isDarkTheme) Color(0xFF1B191A) else Color(0xFFD9D9D9)
+                )
                 .padding(12.dp)
                 .clickable(
                     indication = null,
@@ -190,6 +193,7 @@ fun ProductGrid(
                     ProductGridCard(
                         product = product,
                         onClick = { onProductClick(product) },
+                        isDarkTheme = isDarkTheme,
                         modifier = Modifier.height(itemHeight)
                     )
                 }
@@ -259,10 +263,6 @@ fun ProductGrid(
                 }
             }
         }
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.outlineVariant
-        )
     }
 }
 
@@ -275,6 +275,7 @@ fun ProductGrid(
 private fun ProductGridCard(
     product: Product,
     onClick: () -> Unit,
+    isDarkTheme: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val stockLevel = product.stockQuantity
@@ -285,12 +286,16 @@ private fun ProductGridCard(
             .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isDarkTheme) Color(0xFF2F2D2D) else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp,
             pressedElevation = 6.dp
-        )
+        ),
+        border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = Color(0xFF808080) // 50% white for subtle border in dark mode
+        ) else null
     ) {
         Row(
             modifier = Modifier.fillMaxSize()

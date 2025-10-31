@@ -35,9 +35,9 @@ From `docs/Web Version/src/styles/globals.css`:
 
 **Dark Mode:**
 
-- `background`: `#0E1729`
-- `card`: `#1E293A`
-- `muted`: `#1E293A` (= surfaceVariant)
+- `background`: `#1B191A`
+- `card`: `#1B191A`
+- `muted`: `#1B191A` (= surfaceVariant)
 - `border`: `#3C3C40`
 
 **Light Mode:**

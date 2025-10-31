@@ -177,7 +177,8 @@ fun POSScreen(
                         Text(
                             text = "AuraFlow-POS",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
                         )
 
                         // Standard View badge
@@ -191,7 +192,8 @@ fun POSScreen(
                             Text(
                                 text = "⚡ Standard View",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                fontSize = 11.sp
+                                fontSize = 11.sp,
+                                color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -236,11 +238,11 @@ fun POSScreen(
                                 text = "Clocked In: T#1",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        // Training mode badge
+                        // Training mode badge - KEEP ORANGE COLOR
                         if (isTrainingMode) {
                             Surface(
                                 shape = MaterialTheme.shapes.small,
@@ -264,7 +266,7 @@ fun POSScreen(
                                     Text(
                                         text = "Training",
                                         fontSize = 9.sp,
-                                        color = Color(0xFFF59E0B),
+                                        color = Color(0xFFF59E0B), // Keep orange - this is a status color
                                         fontWeight = FontWeight.Medium
                                     )
                                 }
@@ -285,9 +287,18 @@ fun POSScreen(
                             onClick = { showHelpDialog = true },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Icon(Icons.Default.Help, null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.Help,
+                                null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
+                            )
                             Spacer(Modifier.width(4.dp))
-                            Text("Help", fontSize = 11.sp)
+                            Text(
+                                "Help",
+                                fontSize = 11.sp,
+                                color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
+                            )
                         }
 
                         // Training toggle (Switch FIRST, then Label - matching web line 440-447)
@@ -308,7 +319,7 @@ fun POSScreen(
                             Text(
                                 "Training",
                                 fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -330,9 +341,14 @@ fun POSScreen(
                                 Icon(
                                     Icons.Default.TableChart,
                                     null,
-                                    modifier = Modifier.size(12.dp)
+                                    modifier = Modifier.size(12.dp),
+                                    tint = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
                                 )
-                                Text("Tables", fontSize = 11.sp)
+                                Text(
+                                    "Tables",
+                                    fontSize = 11.sp,
+                                    color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
 
@@ -354,9 +370,14 @@ fun POSScreen(
                                 Icon(
                                     Icons.Default.AdminPanelSettings,
                                     null,
-                                    modifier = Modifier.size(12.dp)
+                                    modifier = Modifier.size(12.dp),
+                                    tint = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
                                 )
-                                Text("Admin", fontSize = 11.sp)
+                                Text(
+                                    "Admin",
+                                    fontSize = 11.sp,
+                                    color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
 
@@ -368,7 +389,8 @@ fun POSScreen(
                             Icon(
                                 if (isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
                                 null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(18.dp),
+                                tint = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -380,7 +402,8 @@ fun POSScreen(
                             Icon(
                                 if (isDarkTheme) Icons.Default.WbSunny else Icons.Default.Brightness3,
                                 null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(18.dp),
+                                tint = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -391,7 +414,7 @@ fun POSScreen(
                                 modifier = Modifier.height(28.dp), // Compact height
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.Transparent,
-                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                    contentColor = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
                                 ),
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                             ) {
@@ -417,7 +440,7 @@ fun POSScreen(
                                 Text(
                                     "John Cashier",
                                     fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             DropdownMenu(
@@ -540,7 +563,8 @@ fun POSScreen(
                             onProductClick = { product -> cartViewModel.addToCart(product) },
                             modifier = Modifier.fillMaxWidth().weight(1f),
                             searchQuery = searchQuery,
-                            onSearchQueryChange = { searchQuery = it }
+                            onSearchQueryChange = { searchQuery = it },
+                            isDarkTheme = isDarkTheme
                         )
 
                         // Action bar

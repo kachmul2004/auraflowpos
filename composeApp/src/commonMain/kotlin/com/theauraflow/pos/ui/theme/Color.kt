@@ -11,9 +11,9 @@ import androidx.compose.ui.graphics.Color
 
 // Dark Mode Colors (default - from :root)
 object DarkColors {
-    val Background = Color(0xFF0E1729)
+    val Background = Color(0xFF1B191A)
     val Foreground = Color(0xFFF9FAFD)
-    val Card = Color(0xFF1E293A)
+    val Card = Color(0xFF1B191A)
     val CardForeground = Color(0xFFF9FAFD)
     val Primary = Color(0xFFA5D8F3)
     val PrimaryForeground = Color(0xFF0C132B)
@@ -25,8 +25,8 @@ object DarkColors {
     val AccentForeground = Color(0xFFF9FAFD)
     val Destructive = Color(0xFFD4183D)
     val DestructiveForeground = Color(0xFFFFFFFF)
-    val Border = Color(0xFF3C3C40)
-    val Input = Color(0xFF3C3C40)
+    val Border = Color(0xFF999999)
+    val Input = Color(0xFF999999)
     val Ring = Color(0xFFA5D8F3)
     val Success = Color(0xFF34D399)
     val Warning = Color(0xFFFBBF24)
