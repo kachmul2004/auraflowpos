@@ -63,7 +63,7 @@ fun CustomerSelectionDialog(
             onDismissRequest = onDismiss,
             properties = DialogProperties(
                 dismissOnBackPress = true,
-                dismissOnClickOutside = true,
+                dismissOnClickOutside = false,
                 usePlatformDefaultWidth = false
             )
         ) {
@@ -267,8 +267,11 @@ private fun CustomerCard(
                     )
                     if (customer.totalSpent > 1000) {
                         Surface(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = RoundedCornerShape(4.dp)
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            shape = CircleShape
                         ) {
                             Text(
                                 text = "VIP",

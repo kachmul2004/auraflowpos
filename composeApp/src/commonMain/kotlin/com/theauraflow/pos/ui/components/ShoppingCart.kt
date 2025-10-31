@@ -29,6 +29,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -100,8 +102,34 @@ fun ShoppingCart(
     // State for OrderNotesDialog
     var showNotesDialog by remember { mutableStateOf(false) }
 
+    val borderColor = colors.outline
+
     Surface(
-        modifier = modifier,
+        modifier = modifier
+            .drawBehind {
+                val strokeWidthPx = 1.dp.toPx()
+                // Left
+                drawLine(
+                    color = borderColor,
+                    start = Offset(0f, 0f),
+                    end = Offset(0f, size.height),
+                    strokeWidth = strokeWidthPx
+                )
+                // Right
+                drawLine(
+                    color = borderColor,
+                    start = Offset(size.width, 0f),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = strokeWidthPx
+                )
+                // Bottom
+                drawLine(
+                    color = borderColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = strokeWidthPx
+                )
+            },
         color = colors.surface,
         tonalElevation = 0.dp
     ) {
@@ -112,8 +140,17 @@ fun ShoppingCart(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, colors.outline),
-                color = colors.surfaceVariant.copy(alpha = 0.3f),
+                    .drawBehind {
+                        val strokeWidthPx = 1.dp.toPx()
+                        // Bottom border only
+                        drawLine(
+                            color = borderColor,
+                            start = Offset(0f, size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = strokeWidthPx
+                        )
+                    },
+                color = colors.surface,
                 tonalElevation = 0.dp
             ) {
                 Column(
@@ -154,8 +191,7 @@ fun ShoppingCart(
 
                         DropdownMenu(
                             expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth()
+                            onDismissRequest = { expanded = false }
                         ) {
                             listOf("Delivery", "Dine In", "Takeout", "Pickup").forEach { type ->
                                 DropdownMenuItem(
@@ -249,7 +285,6 @@ fun ShoppingCart(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(1.dp, colors.outline)
             ) {
                 if (isCartEmpty) {
                     Column(
@@ -316,14 +351,23 @@ fun ShoppingCart(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, colors.outline),
-                color = colors.surfaceVariant.copy(alpha = 0.3f),
+                    .drawBehind {
+                        val strokeWidthPx = 1.dp.toPx()
+                        // Top border only
+                        drawLine(
+                            color = borderColor,
+                            start = Offset(0f, 0f),
+                            end = Offset(size.width, 0f),
+                            strokeWidth = strokeWidthPx
+                        )
+                    },
+                color = colors.surface,
                 tonalElevation = 0.dp
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(6.dp),
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     // Subtotal Row
@@ -334,12 +378,12 @@ fun ShoppingCart(
                         Text(
                             "Subtotal",
                             fontSize = 12.sp,
-                            color = colors.onSurfaceVariant.copy(alpha = 0.8f)
+                            color = colors.onSurface.copy(alpha = 0.8f)
                         )
                         Text(
                             "$${subtotal.formatCurrency()}",
                             fontSize = 12.sp,
-                            color = colors.onSurfaceVariant.copy(alpha = 0.8f)
+                            color = colors.onSurface.copy(alpha = 0.8f)
                         )
                     }
 
@@ -393,7 +437,9 @@ fun ShoppingCart(
                             Text(
                                 "-$${discount.formatCurrency()}",
                                 fontSize = 12.sp,
-                                color = if (discount > 0) colors.error else colors.onSurfaceVariant,
+                                color = if (discount > 0) colors.error else colors.onSurface.copy(
+                                    alpha = 0.8f
+                                ),
                                 textAlign = TextAlign.End
                             )
                         }
@@ -407,18 +453,18 @@ fun ShoppingCart(
                         Text(
                             "Tax (8%)",
                             fontSize = 12.sp,
-                            color = colors.onSurfaceVariant.copy(alpha = 0.8f)
+                            color = colors.onSurface.copy(alpha = 0.8f)
                         )
                         Text(
                             "$${tax.formatCurrency()}",
                             fontSize = 12.sp,
-                            color = colors.onSurfaceVariant.copy(alpha = 0.8f)
+                            color = colors.onSurface.copy(alpha = 0.8f)
                         )
                     }
 
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
-                        color = colors.outline.copy(alpha = 0.3f)
+                        color = colors.outlineVariant
                     )
 
                     // Total Row (Bold and colored)
@@ -459,9 +505,7 @@ fun ShoppingCart(
                             ),
                             border = BorderStroke(
                                 1.dp,
-                                if (isCartEmpty) colors.error.copy(alpha = 0.3f) else colors.error.copy(
-                                    alpha = 0.5f
-                                )
+                                if (isCartEmpty) colors.outlineVariant else colors.error
                             )
                         ) {
                             Icon(Icons.Default.DeleteForever, null, modifier = Modifier.size(16.dp))
@@ -517,6 +561,10 @@ fun ShoppingCart(
             if (showDiscountDialog) {
                 AlertDialog(
                     onDismissRequest = { showDiscountDialog = false },
+                    properties = androidx.compose.ui.window.DialogProperties(
+                        dismissOnBackPress = true,
+                        dismissOnClickOutside = false
+                    ),
                     title = { Text("Apply Discount") },
                     text = {
                         Column(

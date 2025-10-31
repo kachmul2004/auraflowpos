@@ -44,8 +44,8 @@ fun CartItemCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(8.dp),
-        color = colors.surfaceVariant.copy(alpha = 0.3f),
-        border = BorderStroke(1.dp, colors.outline.copy(alpha = 0.5f))
+        color = colors.surfaceVariant,
+        border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         Row(
             modifier = Modifier

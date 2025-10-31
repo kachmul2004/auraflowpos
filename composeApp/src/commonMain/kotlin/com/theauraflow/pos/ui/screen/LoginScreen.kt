@@ -1,132 +1,172 @@
 package com.theauraflow.pos.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.theauraflow.pos.core.util.asString
 import com.theauraflow.pos.presentation.viewmodel.AuthViewModel
 
 /**
- * Login screen for user authentication.
+ * Login screen matching web version design.
+ * Shows email and password inputs with demo credentials.
+ * After successful authentication, navigates to POS screen.
+ *
+ * Web reference: docs/Web Version/src/components/LoginScreen.tsx
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
+    isDarkTheme: Boolean,
     modifier: Modifier = Modifier
 ) {
-    // Pre-filled with development credentials for faster testing
-    var username by remember { mutableStateOf("admin@example.com") }
+    // Pre-filled for faster testing
+    var email by remember { mutableStateOf("admin@example.com") }
     var password by remember { mutableStateOf("password123") }
-    var passwordVisible by remember { mutableStateOf(false) }
 
     val authState by authViewModel.authState.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
 
-    // Navigate on successful login
+    // Navigate to POS screen after successful authentication
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             onLoginSuccess()
         }
     }
 
+    // Clear any previous errors when screen loads
+    LaunchedEffect(Unit) {
+        authViewModel.clearError()
+    }
+
+    // Handle login button click
+    val handleLogin = {
+        authViewModel.login(email, password)
+    }
+
+    // Centered layout with background matching web version
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background) // Proper background color
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Card matching web version max-w-md (448px = 448dp)
         Card(
-            modifier = Modifier
-                .width(400.dp)
-                .padding(16.dp)
+            modifier = Modifier.width(448.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(32.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Logo/Title
+                // Header - "AuraFlow POS Login" (CardTitle in web)
                 Text(
-                    text = "AuraFlow POS",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    text = "AuraFlow POS Login",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                Text(
-                    text = "Sign in to continue",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Username field
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Username") },
+                // Email field (space-y-2 in web = 8dp spacing)
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    enabled = authState !is com.theauraflow.pos.presentation.base.UiState.Loading
-                )
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Email",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Enter email") },
+                        singleLine = true,
+                        enabled = authState !is com.theauraflow.pos.presentation.base.UiState.Loading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = if (isDarkTheme) {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            },
+                            unfocusedContainerColor = if (isDarkTheme) {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        )
+                    )
+                }
 
                 // Password field
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    visualTransformation = if (passwordVisible)
-                        VisualTransformation.None
-                    else
-                        PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(
-                                imageVector = if (passwordVisible)
-                                    Icons.Default.VisibilityOff
-                                else
-                                    Icons.Default.Visibility,
-                                contentDescription = if (passwordVisible)
-                                    "Hide password"
-                                else
-                                    "Show password"
-                            )
-                        }
-                    },
-                    enabled = authState !is com.theauraflow.pos.presentation.base.UiState.Loading
-                )
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Password",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Enter password") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        enabled = authState !is com.theauraflow.pos.presentation.base.UiState.Loading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = if (isDarkTheme) {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            },
+                            unfocusedContainerColor = if (isDarkTheme) {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        )
+                    )
+                }
 
                 // Error message
                 if (authState is com.theauraflow.pos.presentation.base.UiState.Error) {
                     Text(
-                        text = (authState as com.theauraflow.pos.presentation.base.UiState.Error).message.asString(),
+                        text = (authState as com.theauraflow.pos.presentation.base.UiState.Error)
+                            .message.asString(),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Login button
+                // Login button - full width
                 Button(
-                    onClick = {
-                        authViewModel.login(username, password)
-                    },
+                    onClick = handleLogin,
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = username.isNotBlank() &&
-                            password.isNotBlank() &&
+                    enabled = email.isNotBlank() && password.isNotBlank() &&
                             authState !is com.theauraflow.pos.presentation.base.UiState.Loading
                 ) {
                     if (authState is com.theauraflow.pos.presentation.base.UiState.Loading) {
@@ -135,10 +175,138 @@ fun LoginScreen(
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
-                        Text("Sign In")
+                        Text("Login")
                     }
+                }
+
+                // Divider with "Or" text (matching web version)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HorizontalDivider(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "OR",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f))
+                }
+
+                // Admin Login button (outline variant)
+                OutlinedButton(
+                    onClick = { /* TODO: Navigate to Admin login */ },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Admin Login")
+                }
+
+                // Demo credentials (text-sm text-muted-foreground mt-4 in web)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Demo credentials:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Email: admin@example.com",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Password: password123",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
     }
+}
+
+/**
+ * Clock In Dialog matching web version ShiftDialog.
+ * Allows entering opening cash balance.
+ * Terminal selection removed - app runs on single terminal.
+ *
+ * Web reference: docs/Web Version/src/components/LoginScreen.tsx (Dialog)
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClockInDialog(
+    onDismiss: () -> Unit,
+    onClockIn: (openingBalance: Double) -> Unit
+) {
+    var openingBalance by remember { mutableStateOf("100.00") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column {
+                Text(
+                    "Clock In",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    "Enter the opening cash balance to clock in.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Opening balance input
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Opening Cash Balance ($)",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                    OutlinedTextField(
+                        value = openingBalance,
+                        onValueChange = { openingBalance = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("0.00") },
+                        singleLine = true
+                    )
+                    Text(
+                        text = "Count the cash in the drawer and enter the total amount.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val balance = openingBalance.toDoubleOrNull() ?: 0.0
+                    onClockIn(balance)
+                },
+                enabled = openingBalance.isNotBlank()
+            ) {
+                Text("Clock In")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

@@ -30,6 +30,10 @@ import com.theauraflow.pos.ui.components.OnlineIndicator
 import com.theauraflow.pos.ui.dialog.ReceiptDialog
 import com.theauraflow.pos.ui.dialog.HelpDialog
 import com.theauraflow.pos.ui.dialog.TablesDialog
+import com.theauraflow.pos.ui.dialog.EditProfileDialog
+import com.theauraflow.pos.ui.dialog.ShiftStatusDialog
+import com.theauraflow.pos.ui.dialog.QuickSettingsDialog
+import com.theauraflow.pos.ui.dialog.KeyboardShortcutsDialog
 import com.theauraflow.pos.domain.model.CartItem
 import com.theauraflow.pos.domain.model.PaymentMethod
 
@@ -43,6 +47,9 @@ fun POSScreen(
     cartViewModel: CartViewModel,
     orderViewModel: OrderViewModel,
     customerViewModel: CustomerViewModel,
+    isDarkTheme: Boolean,
+    onThemeToggle: () -> Unit,
+    onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val productsState by productViewModel.productsState.collectAsState()
@@ -75,12 +82,15 @@ fun POSScreen(
     var showKeyboardShortcutsDialog by remember { mutableStateOf(false) }
     var showEditProfileDialog by remember { mutableStateOf(false) }
 
+    // Clock In dialog state - shows on first load before shift starts
+    var showClockInDialog by remember { mutableStateOf(true) }
+    var shiftStarted by remember { mutableStateOf(false) }
+
     // View navigation
     var currentView by remember { mutableStateOf("pos") } // "pos" or "tables"
 
     // Top bar states
     var isTrainingMode by remember { mutableStateOf(false) }
-    var isDarkTheme by remember { mutableStateOf(true) }
     var isFullscreen by remember { mutableStateOf(false) }
     var showUserMenu by remember { mutableStateOf(false) }
 
@@ -149,364 +159,370 @@ fun POSScreen(
         // Compact Top Bar - matches screenshot exactly
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 2.dp
+            color = MaterialTheme.colorScheme.surface
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Left: App name + badges
+            Column {
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "AuraFlow-POS",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    // Standard View badge
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline
-                        )
+                    // Left: App name + badges
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "⚡ Standard View",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 11.sp
+                            text = "AuraFlow-POS",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
-                    }
 
-                    // Subscription badges
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline
-                        )
-                    ) {
-                        Text(
-                            text = "🍽️",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 11.sp
-                        )
-                    }
-
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline
-                        )
-                    ) {
-                        Text(
-                            text = "🏪",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 11.sp
-                        )
-                    }
-
-                    // Clocked In badge
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline
-                        )
-                    ) {
-                        Text(
-                            text = "Clocked In: T#1",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Training mode badge
-                    if (isTrainingMode) {
+                        // Standard View badge
                         Surface(
                             shape = MaterialTheme.shapes.small,
-                            color = Color(0xFFF59E0B).copy(alpha = 0.2f),
                             border = androidx.compose.foundation.BorderStroke(
                                 1.dp,
-                                Color(0xFFF59E0B).copy(alpha = 0.5f)
+                                MaterialTheme.colorScheme.outline
                             )
+                        ) {
+                            Text(
+                                text = "⚡ Standard View",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontSize = 11.sp
+                            )
+                        }
+
+                        // Subscription badges
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline
+                            )
+                        ) {
+                            Text(
+                                text = "🍽️",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontSize = 11.sp
+                            )
+                        }
+
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline
+                            )
+                        ) {
+                            Text(
+                                text = "🏪",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontSize = 11.sp
+                            )
+                        }
+
+                        // Clocked In badge
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline
+                            )
+                        ) {
+                            Text(
+                                text = "Clocked In: T#1",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // Training mode badge
+                        if (isTrainingMode) {
+                            Surface(
+                                shape = MaterialTheme.shapes.small,
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    Color(0xFFF59E0B)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.School,
+                                        contentDescription = null,
+                                        tint = Color(0xFFF59E0B),
+                                        modifier = Modifier.size(10.dp)
+                                    )
+                                    Text(
+                                        text = "Training",
+                                        fontSize = 9.sp,
+                                        color = Color(0xFFF59E0B),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Center: Online indicator
+                    OnlineIndicator(isOnline = false, pendingCount = 0)
+
+                    // Right: Action buttons
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // Help
+                        TextButton(
+                            onClick = { showHelpDialog = true },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Icon(Icons.Default.Help, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Help", fontSize = 11.sp)
+                        }
+
+                        // Training toggle (Switch FIRST, then Label - matching web line 440-447)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Switch(
+                                checked = isTrainingMode,
+                                onCheckedChange = {
+                                    isTrainingMode = it
+                                    // TODO: Show badge in top left when enabled
+                                },
+                                modifier = Modifier
+                                    .height(20.dp)
+                                    .scale(0.8f) // Scale down the switch to make it smaller
+                            )
+                            Text(
+                                "Training",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // Tables - same style as Standard View badge
+                        Surface(
+                            onClick = { currentView = "tables" }, // Navigate to full screen
+                            shape = MaterialTheme.shapes.small,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline
+                            ),
+                            color = MaterialTheme.colorScheme.surface
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.School,
-                                    contentDescription = null,
-                                    tint = Color(0xFFF59E0B),
-                                    modifier = Modifier.size(10.dp)
+                                    Icons.Default.TableChart,
+                                    null,
+                                    modifier = Modifier.size(12.dp)
                                 )
-                                Text(
-                                    text = "Training",
-                                    fontSize = 9.sp,
-                                    color = Color(0xFFF59E0B),
-                                    fontWeight = FontWeight.Medium
-                                )
+                                Text("Tables", fontSize = 11.sp)
                             }
                         }
-                    }
-                }
 
-                // Center: Online indicator
-                OnlineIndicator(isOnline = false, pendingCount = 0)
-
-                // Right: Action buttons
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Help
-                    TextButton(
-                        onClick = { showHelpDialog = true },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Icon(Icons.Default.Help, null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Help", fontSize = 11.sp)
-                    }
-
-                    // Training toggle (Switch FIRST, then Label - matching web line 440-447)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Switch(
-                            checked = isTrainingMode,
-                            onCheckedChange = {
-                                isTrainingMode = it
-                                // TODO: Show badge in top left when enabled
-                            },
-                            modifier = Modifier
-                                .height(20.dp)
-                                .scale(0.8f) // Scale down the switch to make it smaller
-                        )
-                        Text(
-                            "Training",
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Tables - same style as Standard View badge
-                    Surface(
-                        onClick = { currentView = "tables" }, // Navigate to full screen
-                        shape = MaterialTheme.shapes.small,
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline
-                        ),
-                        color = MaterialTheme.colorScheme.surface
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        // Admin - same style as Standard View badge
+                        Surface(
+                            onClick = { /* TODO */ },
+                            shape = MaterialTheme.shapes.small,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline
+                            ),
+                            color = MaterialTheme.colorScheme.surface
                         ) {
-                            Icon(Icons.Default.TableChart, null, modifier = Modifier.size(12.dp))
-                            Text("Tables", fontSize = 11.sp)
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.AdminPanelSettings,
+                                    null,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text("Admin", fontSize = 11.sp)
+                            }
                         }
-                    }
 
-                    // Admin - same style as Standard View badge
-                    Surface(
-                        onClick = { /* TODO */ },
-                        shape = MaterialTheme.shapes.small,
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline
-                        ),
-                        color = MaterialTheme.colorScheme.surface
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        // Fullscreen
+                        IconButton(
+                            onClick = { isFullscreen = !isFullscreen },
+                            modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
-                                Icons.Default.AdminPanelSettings,
+                                if (isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
                                 null,
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier.size(18.dp)
                             )
-                            Text("Admin", fontSize = 11.sp)
                         }
-                    }
 
-                    // Fullscreen
-                    IconButton(
-                        onClick = { isFullscreen = !isFullscreen },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            if (isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
-                            null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    // Theme
-                    IconButton(
-                        onClick = { isDarkTheme = !isDarkTheme },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            if (isDarkTheme) Icons.Default.WbSunny else Icons.Default.Brightness3,
-                            null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    // User menu with name and avatar (matching web UserProfileDropdown)
-                    Box {
-                        Button(
-                            onClick = { showUserMenu = !showUserMenu },
-                            modifier = Modifier.height(28.dp), // Compact height
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                        // Theme
+                        IconButton(
+                            onClick = onThemeToggle,
+                            modifier = Modifier.size(32.dp)
                         ) {
-                            // Avatar with initials
-                            Surface(
-                                modifier = Modifier.size(20.dp), // Small avatar
-                                shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.primary
+                            Icon(
+                                if (isDarkTheme) Icons.Default.WbSunny else Icons.Default.Brightness3,
+                                null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        // User menu with name and avatar (matching web UserProfileDropdown)
+                        Box {
+                            Button(
+                                onClick = { showUserMenu = !showUserMenu },
+                                modifier = Modifier.height(28.dp), // Compact height
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
+                                // Avatar with initials
+                                Surface(
+                                    modifier = Modifier.size(20.dp), // Small avatar
+                                    shape = RoundedCornerShape(50),
+                                    color = MaterialTheme.colorScheme.primary
                                 ) {
-                                    Text(
-                                        text = "JC", // John Cashier initials
-                                        fontSize = 9.sp,
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Text(
+                                            text = "JC", // John Cashier initials
+                                            fontSize = 9.sp,
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    "John Cashier",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                             }
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                "John Cashier",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showUserMenu,
-                            onDismissRequest = { showUserMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        "My Account",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                },
-                                onClick = {},
-                                enabled = false
-                            )
-                            HorizontalDivider()
-                            // Edit Profile
-                            DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Person,
-                                            null,
-                                            modifier = Modifier.size(16.dp)
+                            DropdownMenu(
+                                expanded = showUserMenu,
+                                onDismissRequest = { showUserMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "My Account",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
-                                        Text("Edit Profile", fontSize = 12.sp)
+                                    },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                                HorizontalDivider()
+                                // Edit Profile
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Person,
+                                                null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text("Edit Profile", fontSize = 12.sp)
+                                        }
+                                    },
+                                    onClick = {
+                                        showEditProfileDialog = true
+                                        showUserMenu = false
                                     }
-                                },
-                                onClick = {
-                                    showEditProfileDialog = true
-                                    showUserMenu = false
-                                }
-                            )
-                            HorizontalDivider()
-                            // Shift Status
-                            DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Schedule,
-                                            null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Text("Shift Status", fontSize = 12.sp)
+                                )
+                                HorizontalDivider()
+                                // Shift Status
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Schedule,
+                                                null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text("Shift Status", fontSize = 12.sp)
+                                        }
+                                    },
+                                    onClick = {
+                                        showShiftDialog = true
+                                        showUserMenu = false
                                     }
-                                },
-                                onClick = {
-                                    showShiftDialog = true
-                                    showUserMenu = false
-                                }
-                            )
-                            // Settings
-                            DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Settings,
-                                            null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Text("Settings", fontSize = 12.sp)
+                                )
+                                // Settings
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Settings,
+                                                null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text("Settings", fontSize = 12.sp)
+                                        }
+                                    },
+                                    onClick = {
+                                        showSettingsDialog = true
+                                        showUserMenu = false
                                     }
-                                },
-                                onClick = {
-                                    showSettingsDialog = true
-                                    showUserMenu = false
-                                }
-                            )
-                            // Keyboard Shortcuts
-                            DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Keyboard,
-                                            null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Text("Keyboard Shortcuts", fontSize = 12.sp)
+                                )
+                                // Keyboard Shortcuts
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Keyboard,
+                                                null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text("Keyboard Shortcuts", fontSize = 12.sp)
+                                        }
+                                    },
+                                    onClick = {
+                                        showKeyboardShortcutsDialog = true
+                                        showUserMenu = false
                                     }
-                                },
-                                onClick = {
-                                    showKeyboardShortcutsDialog = true
-                                    showUserMenu = false
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
             }
         }
 
@@ -600,6 +616,21 @@ fun POSScreen(
         }
     }
 
+    // Clock In Dialog - shows immediately when POSScreen loads
+    if (showClockInDialog && !shiftStarted) {
+        ClockInDialog(
+            onClockIn = { openingBalance ->
+                // TODO: Start shift with openingBalance
+                shiftStarted = true
+                showClockInDialog = false
+            },
+            onCancel = {
+                // Cancel = Logout
+                onLogout()
+            }
+        )
+    }
+
     // Dialogs
     ReceiptDialog(
         open = showReceiptDialog,
@@ -621,103 +652,116 @@ fun POSScreen(
         HelpDialog(onDismiss = { showHelpDialog = false })
     }
 
-    // Edit Profile Dialog (placeholder)
+    // Edit Profile Dialog
     if (showEditProfileDialog) {
-        AlertDialog(
-            onDismissRequest = { showEditProfileDialog = false },
-            title = { Text("Edit Profile") },
-            text = { Text("Edit profile functionality coming soon") },
-            confirmButton = {
-                TextButton(onClick = { showEditProfileDialog = false }) {
-                    Text("Close")
-                }
-            }
+        EditProfileDialog(
+            open = showEditProfileDialog,
+            onDismiss = { showEditProfileDialog = false }
         )
     }
 
-    // Shift Status Dialog (placeholder)
+    // Shift Status Dialog
     if (showShiftDialog) {
-        AlertDialog(
-            onDismissRequest = { showShiftDialog = false },
-            title = { Text("Shift Status") },
-            text = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("Current Shift Information", fontWeight = FontWeight.Bold)
-                    Text("Terminal: T#1")
-                    Text("Clocked In: 09:00 AM")
-                    Text("Total Orders: 0")
-                    Text("Total Sales: $0.00")
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showShiftDialog = false }) {
-                    Text("Close")
-                }
-            }
+        ShiftStatusDialog(
+            open = showShiftDialog,
+            onDismiss = { showShiftDialog = false }
         )
     }
 
-    // Settings Dialog (placeholder)
+    // Quick Settings Dialog
     if (showSettingsDialog) {
-        AlertDialog(
-            onDismissRequest = { showSettingsDialog = false },
-            title = { Text("Settings") },
-            text = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Auto-Print Receipts")
-                        Switch(checked = false, onCheckedChange = {})
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Sound Effects")
-                        Switch(checked = true, onCheckedChange = {})
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showSettingsDialog = false }) {
-                    Text("Close")
-                }
-            }
+        QuickSettingsDialog(
+            open = showSettingsDialog,
+            onDismiss = { showSettingsDialog = false }
         )
     }
 
-    // Keyboard Shortcuts Dialog (placeholder)
+    // Keyboard Shortcuts Dialog
     if (showKeyboardShortcutsDialog) {
-        AlertDialog(
-            onDismissRequest = { showKeyboardShortcutsDialog = false },
-            title = { Text("Keyboard Shortcuts") },
-            text = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text("General Shortcuts:", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    Text("F1 - Show keyboard shortcuts", fontSize = 11.sp)
-                    Text("F2 - Quick payment (Cash)", fontSize = 11.sp)
-                    Text("F3 - Search products", fontSize = 11.sp)
-                    Text("F11 - Toggle fullscreen", fontSize = 11.sp)
-                    Text("Ctrl+L - Lock screen", fontSize = 11.sp)
-                    Text("Ctrl+N - New order / Clear cart", fontSize = 11.sp)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showKeyboardShortcutsDialog = false }) {
-                    Text("Close")
-                }
-            }
+        KeyboardShortcutsDialog(
+            open = showKeyboardShortcutsDialog,
+            onDismiss = { showKeyboardShortcutsDialog = false }
         )
     }
 }
 
+/**
+ * Clock In Dialog for starting a shift.
+ * Shows opening cash balance input.
+ * No close button - only Clock In or Cancel (logout).
+ *
+ * Web reference: docs/Web Version/src/components/LoginScreen.tsx (Dialog)
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClockInDialog(
+    onClockIn: (openingBalance: Double) -> Unit,
+    onCancel: () -> Unit
+) {
+    var openingBalance by remember { mutableStateOf("100.00") }
+
+    AlertDialog(
+        onDismissRequest = {}, // No dismiss on outside click
+        title = {
+            Column {
+                Text(
+                    "Clock In",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    "Enter the opening cash balance to start your shift.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Opening balance input
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Opening Cash Balance ($)",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                    OutlinedTextField(
+                        value = openingBalance,
+                        onValueChange = { openingBalance = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("0.00") },
+                        singleLine = true
+                    )
+                    Text(
+                        text = "Count the cash in the drawer and enter the total amount.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val balance = openingBalance.toDoubleOrNull() ?: 0.0
+                    onClockIn(balance)
+                },
+                enabled = openingBalance.isNotBlank()
+            ) {
+                Text("Clock In")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text("Cancel")
+            }
+        }
+    )
+}

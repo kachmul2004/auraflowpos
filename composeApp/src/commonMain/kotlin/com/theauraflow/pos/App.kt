@@ -31,20 +31,29 @@ private fun AuraFlowApp() {
 
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
 
-    AuraFlowTheme {
+    // Theme state hoisted to App level
+    var isDarkTheme by remember { mutableStateOf(true) }
+
+    AuraFlowTheme(darkTheme = isDarkTheme) {
         if (isLoggedIn) {
             POSScreen(
                 productViewModel = productViewModel,
                 cartViewModel = cartViewModel,
                 orderViewModel = orderViewModel,
-                customerViewModel = customerViewModel
+                customerViewModel = customerViewModel,
+                isDarkTheme = isDarkTheme,
+                onThemeToggle = { isDarkTheme = !isDarkTheme },
+                onLogout = {
+                    authViewModel.logout()
+                }
             )
         } else {
             LoginScreen(
                 authViewModel = authViewModel,
                 onLoginSuccess = {
                     // Login successful, state will update automatically
-                }
+                },
+                isDarkTheme = isDarkTheme
             )
         }
     }

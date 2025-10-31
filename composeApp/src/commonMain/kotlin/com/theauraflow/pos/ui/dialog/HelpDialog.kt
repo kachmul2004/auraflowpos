@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 /**
  * Help dialog with comprehensive user guide for POS system.
@@ -27,7 +28,13 @@ fun HelpDialog(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        )
+    ) {
         Surface(
             modifier = modifier
                 .fillMaxWidth(0.95f)
@@ -172,11 +179,11 @@ private fun GettingStartedContent() {
             iconTint = Color(0xFFF59E0B)
         ) {
             Surface(
-                color = Color(0xFFF59E0B).copy(alpha = 0.1f),
+                color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = MaterialTheme.shapes.medium,
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    Color(0xFFF59E0B).copy(alpha = 0.3f)
+                    Color(0xFFF59E0B)
                 )
             ) {
                 Column(
@@ -216,11 +223,11 @@ private fun GettingStartedContent() {
                     )
 
                     Surface(
-                        color = Color(0xFFEF4444).copy(alpha = 0.2f),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = MaterialTheme.shapes.small,
                         border = androidx.compose.foundation.BorderStroke(
                             1.dp,
-                            Color(0xFFEF4444).copy(alpha = 0.5f)
+                            Color(0xFFEF4444)
                         ),
                         modifier = Modifier.padding(top = 8.dp)
                     ) {

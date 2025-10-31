@@ -197,10 +197,10 @@ private fun TableCard(
     onClick: () -> Unit
 ) {
     val backgroundColor = when (table.status) {
-        TableStatus.Available -> Color(0xFF10B981).copy(alpha = 0.1f)
-        TableStatus.Occupied -> Color(0xFFEF4444).copy(alpha = 0.1f)
-        TableStatus.Reserved -> Color(0xFF3B82F6).copy(alpha = 0.1f)
-        TableStatus.Cleaning -> Color(0xFFF59E0B).copy(alpha = 0.1f)
+        TableStatus.Available -> MaterialTheme.colorScheme.surfaceVariant
+        TableStatus.Occupied -> MaterialTheme.colorScheme.surfaceVariant
+        TableStatus.Reserved -> MaterialTheme.colorScheme.surfaceVariant
+        TableStatus.Cleaning -> MaterialTheme.colorScheme.surfaceVariant
     }
 
     val borderColor = when (table.status) {

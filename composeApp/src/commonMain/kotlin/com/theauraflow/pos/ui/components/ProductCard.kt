@@ -2,6 +2,7 @@ package com.theauraflow.pos.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,6 +52,7 @@ fun ProductCard(
     val isLowStock = product.stockQuantity in 1..10
     val isEnabled = allowOutOfStockPurchase || !isOutOfStock
     val colors = MaterialTheme.colorScheme
+    val borderRadius = 12.dp
 
     // Stock badge color based on quantity
     val stockBadgeColor = when {
@@ -60,18 +62,15 @@ fun ProductCard(
     }
 
     Card(
-        onClick = onClick,
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp)),
-        enabled = isEnabled,
+            .clip(RoundedCornerShape(borderRadius))
+            .clickable(enabled = isEnabled) { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isEnabled) 2.dp else 0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isEnabled) colors.surface else colors.surfaceVariant.copy(alpha = 0.5f),
-            disabledContainerColor = colors.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = if (isEnabled) colors.surface else colors.surfaceVariant,
+            disabledContainerColor = colors.surfaceVariant
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isEnabled) 2.dp else 0.dp,
-            disabledElevation = 0.dp
-        )
+        shape = RoundedCornerShape(borderRadius)
     ) {
         Row(
             modifier = Modifier.fillMaxSize()
@@ -81,7 +80,7 @@ fun ProductCard(
                 modifier = Modifier
                     .weight(0.5f)
                     .fillMaxHeight()
-                    .background(if (isEnabled) colors.surface else colors.surfaceVariant.copy(alpha = 0.3f))
+                    .background(if (isEnabled) colors.surface else colors.surfaceVariant)
                     .padding(12.dp),
                 contentAlignment = Alignment.TopStart
             ) {
@@ -155,7 +154,7 @@ fun ProductCard(
                 modifier = Modifier
                     .weight(0.5f)
                     .fillMaxHeight()
-                    .background(colors.surfaceVariant.copy(alpha = if (isEnabled) 1f else 0.3f)),
+                    .background(if (isEnabled) colors.surfaceVariant else colors.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 if (!product.imageUrl.isNullOrEmpty()) {

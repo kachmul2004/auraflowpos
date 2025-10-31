@@ -112,8 +112,7 @@ private fun OnlineStatusDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
             dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-            usePlatformDefaultWidth = false
+            dismissOnClickOutside = false
         )
     ) {
         Surface(

@@ -83,13 +83,10 @@ fun ProductGrid(
         // Search bar (matches web version: hidden lg:block p-4 border-b border-border bg-card)
         Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                ) { /* Consume click to prevent clearing focus */ },
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            tonalElevation = 1.dp
+                .fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
+            shadowElevation = 1.dp
         ) {
             Row(
                 modifier = Modifier.padding(6.dp),
@@ -207,14 +204,9 @@ fun ProductGrid(
 
         // Pagination controls
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                ) { focusManager.clearFocus() },
+            modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 2.dp
+            shape = RoundedCornerShape(0.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -230,7 +222,7 @@ fun ProductGrid(
                     modifier = Modifier.size(28.dp), // Compact circular button
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
                     Icon(
@@ -256,7 +248,7 @@ fun ProductGrid(
                     modifier = Modifier.size(28.dp), // Compact circular button
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                        disabledContainerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
                     Icon(
@@ -267,6 +259,10 @@ fun ProductGrid(
                 }
             }
         }
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.outlineVariant
+        )
     }
 }
 
@@ -314,7 +310,7 @@ private fun ProductGridCard(
                         color = if (stockLevel > 5)
                             MaterialTheme.colorScheme.secondary
                         else
-                        MaterialTheme.colorScheme.error,
+                            MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(bottom = 4.dp)
                     ) {
                         Text(
@@ -388,7 +384,7 @@ private fun ProductGridCard(
                     .weight(1f)
                     .fillMaxHeight()
                     .background(
-                        MaterialTheme.colorScheme.surfaceVariant,
+                        MaterialTheme.colorScheme.surface,
                         RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
                     ),
                 contentAlignment = Alignment.Center
@@ -440,7 +436,7 @@ private fun ProductGridCard(
                         Icon(
                             imageVector = getCategoryIconForProduct(product.categoryName),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                             modifier = Modifier.size(48.dp)
                         )
                         Text(
@@ -464,7 +460,7 @@ private fun PlaceholderCard(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f),
         border = androidx.compose.foundation.BorderStroke(
             width = 2.dp,
             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
@@ -477,7 +473,7 @@ private fun PlaceholderCard(modifier: Modifier = Modifier) {
             Text(
                 text = "Empty",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         }
     }

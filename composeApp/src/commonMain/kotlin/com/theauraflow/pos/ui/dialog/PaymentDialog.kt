@@ -65,7 +65,11 @@ fun PaymentDialog(
     if (open) {
         Dialog(
             onDismissRequest = onDismiss,
-            properties = DialogProperties(usePlatformDefaultWidth = false)
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false
+            )
         ) {
             Surface(
                 modifier = modifier
@@ -152,7 +156,7 @@ fun PaymentDialog(
 
                             HorizontalDivider(
                                 modifier = Modifier.padding(vertical = 4.dp),
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                color = MaterialTheme.colorScheme.outlineVariant
                             )
 
                             // Total
