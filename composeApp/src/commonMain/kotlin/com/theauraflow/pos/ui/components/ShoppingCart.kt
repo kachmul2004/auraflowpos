@@ -39,6 +39,7 @@ import com.theauraflow.pos.core.util.formatCurrency
 import com.theauraflow.pos.ui.dialog.EditCartItemDialog
 import com.theauraflow.pos.ui.dialog.PaymentDialog
 import com.theauraflow.pos.ui.dialog.CustomerSelectionDialog
+import com.theauraflow.pos.ui.dialog.OrderNotesDialog
 import com.theauraflow.pos.domain.model.Customer
 
 /**
@@ -73,6 +74,8 @@ fun ShoppingCart(
     customers: List<Customer> = emptyList(),
     selectedCustomer: Customer? = null,
     onSelectCustomer: (Customer?) -> Unit = {},
+    orderNotes: String = "",
+    onSaveNotes: (String) -> Unit = {},
     customerName: String? = null,
     onAddCustomer: () -> Unit = {},
     onAddNotes: () -> Unit = {},
@@ -92,6 +95,9 @@ fun ShoppingCart(
 
     // State for CustomerSelectionDialog
     var showCustomerDialog by remember { mutableStateOf(false) }
+
+    // State for OrderNotesDialog
+    var showNotesDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = modifier,
@@ -162,7 +168,7 @@ fun ShoppingCart(
 
                     // Notes Button
                     OutlinedButton(
-                        onClick = onAddNotes,
+                        onClick = { showNotesDialog = true },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
@@ -593,6 +599,16 @@ fun ShoppingCart(
                 onSelectCustomer = { customer ->
                     onSelectCustomer(customer)
                     showCustomerDialog = false
+                }
+            )
+
+            // Order Notes Dialog
+            OrderNotesDialog(
+                show = showNotesDialog,
+                currentNotes = orderNotes,
+                onDismiss = { showNotesDialog = false },
+                onSaveNotes = { notes ->
+                    onSaveNotes(notes)
                 }
             )
         }

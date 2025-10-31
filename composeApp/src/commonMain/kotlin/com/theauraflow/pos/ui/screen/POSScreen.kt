@@ -68,6 +68,9 @@ fun POSScreen(
     val customersState by customerViewModel.customersState.collectAsState()
     val selectedCustomer by customerViewModel.selectedCustomer.collectAsState()
 
+    // Order notes state
+    var orderNotes by remember { mutableStateOf("") }
+
     // Extract customers list from state
     val customers = remember(customersState) {
         when (val state = customersState) {
@@ -172,6 +175,10 @@ fun POSScreen(
                     customerViewModel.clearSelection()
                 }
             },
+            orderNotes = orderNotes,
+            onSaveNotes = { notes ->
+                orderNotes = notes
+            },
             onUpdateItem = { cartItem, newQuantity, itemDiscount, priceOverride ->
                 // Update quantity
                 if (newQuantity != cartItem.quantity) {
@@ -202,7 +209,7 @@ fun POSScreen(
                     customerId = selectedCustomer?.id, // Get from customer selection
                     paymentMethod = paymentMethod,
                     amountPaid = if (paymentMethod == PaymentMethod.CASH) amountReceived else null,
-                    notes = null // TODO: Get from order notes
+                    notes = orderNotes
                 )
 
                 // Cart will be cleared automatically by CreateOrderUseCase
