@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Note
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.AccountBalance
@@ -24,6 +23,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -82,7 +82,8 @@ fun ShoppingCart(
     customerName: String? = null,
     onAddCustomer: () -> Unit = {},
     onAddNotes: () -> Unit = {},
-    onApplyDiscount: (Double, Boolean) -> Unit = { _, _ -> }
+    onApplyDiscount: (Double, Boolean) -> Unit = { _, _ -> },
+    onParkSale: () -> Unit = {} // Opens ParkedSalesDialog
 ) {
     val colors = MaterialTheme.colorScheme
     var showDiscountDialog by remember { mutableStateOf(false) }
@@ -264,7 +265,7 @@ fun ShoppingCart(
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Icon(
-                            Icons.Default.Note,
+                            Icons.AutoMirrored.Filled.Note,
                             contentDescription = null,
                             modifier = Modifier.size(14.dp),
                             tint = colors.onSurface
@@ -513,7 +514,7 @@ fun ShoppingCart(
 
                         // Park Sale Button
                         OutlinedButton(
-                            onClick = { },
+                            onClick = onParkSale,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(32.dp),
@@ -763,8 +764,15 @@ private fun CartItemButton(
                         fontSize = 10.sp,
                         color = colors.onSurfaceVariant
                     )
+                    val variation = cartItem.variation
                     Text(
-                        text = cartItem.product.name,
+                        text = buildString {
+                            append(cartItem.product.name)
+                            if (variation != null) {
+                                append(" - ")
+                                append(variation.name)
+                            }
+                        },
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
@@ -772,10 +780,7 @@ private fun CartItemButton(
                     )
                 }
                 Text(
-                    text = "$${
-                        cartItem.modifiers.fold(cartItem.product.price * cartItem.quantity) { sum, mod -> sum + (mod.price ?: 0.0) }
-                            .formatCurrency()
-                    }",
+                    text = "$${cartItem.total.formatCurrency()}",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -791,7 +796,16 @@ private fun CartItemButton(
                 ) {
                     cartItem.modifiers.forEach { modifier ->
                         Text(
-                            text = "+ ${modifier.name}${if ((modifier.price ?: 0.0) > 0) " (+$${modifier.price.formatCurrency()})" else ""}",
+                            text = buildString {
+                                append("+ ")
+                                append(modifier.name)
+                                if (modifier.quantity > 1) {
+                                    append(" x${modifier.quantity}")
+                                }
+                                if (modifier.price > 0) {
+                                    append(" (+$${(modifier.price * modifier.quantity).formatCurrency()})")
+                                }
+                            },
                             fontSize = 8.sp,
                             color = colors.onSurfaceVariant
                         )

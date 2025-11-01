@@ -2,8 +2,11 @@ package com.theauraflow.pos.domain.repository
 
 import com.theauraflow.pos.domain.model.CartItem
 import com.theauraflow.pos.domain.model.Discount
+import com.theauraflow.pos.domain.model.HeldCart
 import com.theauraflow.pos.domain.model.Modifier
 import com.theauraflow.pos.domain.model.Product
+import com.theauraflow.pos.domain.model.ProductVariation
+import com.theauraflow.pos.domain.model.CartItemModifier
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -31,14 +34,16 @@ interface CartRepository {
      * Add a product to the cart.
      *
      * @param product Product to add
+     * @param variation Optional product variation (e.g., size)
      * @param quantity Quantity to add
-     * @param modifiers Optional modifiers
+     * @param modifiers Optional modifiers with their quantities
      * @return Result with updated cart item or error
      */
     suspend fun addToCart(
         product: Product,
+        variation: ProductVariation? = null,
         quantity: Int = 1,
-        modifiers: List<Modifier> = emptyList()
+        modifiers: List<CartItemModifier> = emptyList()
     ): Result<CartItem>
 
     /**
@@ -51,13 +56,13 @@ interface CartRepository {
     suspend fun updateQuantity(cartItemId: String, quantity: Int): Result<CartItem>
 
     /**
-     * Add modifier to a cart item.
+     * Add a modifier to a cart item.
      *
      * @param cartItemId Cart item ID
-     * @param modifier Modifier to add
+     * @param modifier Modifier to add (with quantity)
      * @return Result with updated cart item or error
      */
-    suspend fun addModifier(cartItemId: String, modifier: Modifier): Result<CartItem>
+    suspend fun addModifier(cartItemId: String, modifier: CartItemModifier): Result<CartItem>
 
     /**
      * Remove modifier from a cart item.
@@ -122,6 +127,28 @@ interface CartRepository {
      * @return Result with success or error
      */
     suspend fun retrieveCart(cartId: String): Result<Unit>
+
+    /**
+     * Get all held carts.
+     *
+     * @return Result with list of held carts or error
+     */
+    suspend fun getHeldCarts(): Result<List<HeldCart>>
+
+    /**
+     * Delete a held cart.
+     *
+     * @param cartId Held cart ID
+     * @return Result with success or error
+     */
+    suspend fun deleteHeldCart(cartId: String): Result<Unit>
+
+    /**
+     * Observe held carts as a Flow.
+     *
+     * @return Flow emitting list of held carts
+     */
+    fun observeHeldCarts(): Flow<List<HeldCart>>
 }
 
 /**

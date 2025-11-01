@@ -3,9 +3,9 @@ package com.theauraflow.pos.preview.cart
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.theauraflow.pos.domain.model.CartItem
+import com.theauraflow.pos.domain.model.CartItemModifier
 import com.theauraflow.pos.domain.model.Discount
 import com.theauraflow.pos.domain.model.DiscountType
-import com.theauraflow.pos.domain.model.Modifier as ProductModifier
 import com.theauraflow.pos.domain.model.Product
 import com.theauraflow.pos.ui.components.CartItemCard
 import com.theauraflow.pos.ui.theme.AuraFlowTheme
@@ -53,12 +53,12 @@ private fun CartItemCardWithModifiersPreview() {
                 ),
                 quantity = 1,
                 modifiers = listOf(
-                    ProductModifier(
+                    CartItemModifier(
                         id = "mod1",
                         name = "Extra Shot",
                         price = 0.50
                     ),
-                    ProductModifier(
+                    CartItemModifier(
                         id = "mod2",
                         name = "Oat Milk",
                         price = 0.75

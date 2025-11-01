@@ -1,15 +1,19 @@
 package com.theauraflow.pos.presentation.viewmodel
 
 import com.theauraflow.pos.domain.model.CartItem
+import com.theauraflow.pos.domain.model.CartItemModifier
 import com.theauraflow.pos.domain.model.Discount
-import com.theauraflow.pos.domain.model.Modifier
+import com.theauraflow.pos.domain.model.HeldCart
 import com.theauraflow.pos.domain.model.Product
+import com.theauraflow.pos.domain.model.ProductVariation
 import com.theauraflow.pos.domain.repository.CartRepository
 import com.theauraflow.pos.domain.repository.CartTotals
 import com.theauraflow.pos.domain.usecase.cart.AddToCartUseCase
 import com.theauraflow.pos.domain.usecase.cart.ApplyDiscountUseCase
 import com.theauraflow.pos.domain.usecase.cart.ClearCartUseCase
+import com.theauraflow.pos.domain.usecase.cart.DeleteHeldCartUseCase
 import com.theauraflow.pos.domain.usecase.cart.GetCartTotalsUseCase
+import com.theauraflow.pos.domain.usecase.cart.GetHeldCartsUseCase
 import com.theauraflow.pos.domain.usecase.cart.HoldCartUseCase
 import com.theauraflow.pos.domain.usecase.cart.RemoveFromCartUseCase
 import com.theauraflow.pos.domain.usecase.cart.RetrieveCartUseCase
@@ -47,10 +51,15 @@ class CartViewModel(
     private val getCartTotalsUseCase: GetCartTotalsUseCase,
     private val holdCartUseCase: HoldCartUseCase,
     private val retrieveCartUseCase: RetrieveCartUseCase,
+    private val getHeldCartsUseCase: GetHeldCartsUseCase,
+    private val deleteHeldCartUseCase: DeleteHeldCartUseCase,
     private val viewModelScope: CoroutineScope
 ) {
     private val _cartState = MutableStateFlow<UiState<CartUiState>>(UiState.Success(CartUiState()))
     val cartState: StateFlow<UiState<CartUiState>> = _cartState.asStateFlow()
+
+    private val _heldCartsState = MutableStateFlow<UiState<List<HeldCart>>>(UiState.Loading())
+    val heldCartsState: StateFlow<UiState<List<HeldCart>>> = _heldCartsState.asStateFlow()
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
@@ -58,9 +67,14 @@ class CartViewModel(
     /**
      * Add product to cart.
      */
-    fun addToCart(product: Product, quantity: Int = 1, modifiers: List<Modifier> = emptyList()) {
+    fun addToCart(
+        product: Product,
+        variation: ProductVariation? = null,
+        quantity: Int = 1,
+        modifiers: List<CartItemModifier> = emptyList()
+    ) {
         viewModelScope.launch(Dispatchers.Default) {
-            addToCartUseCase(product, quantity, modifiers)
+            addToCartUseCase(product, variation, quantity, modifiers)
                 .onSuccess {
                     _message.value = "${product.name} added to cart"
                     updateCartState()
@@ -146,11 +160,12 @@ class CartViewModel(
         viewModelScope.launch(Dispatchers.Default) {
             holdCartUseCase(name)
                 .onSuccess { cartId ->
-                    _message.value = "Cart saved: $cartId"
+                    _message.value = "Sale parked successfully"
                     _cartState.value = UiState.Success(CartUiState())
+                    loadHeldCarts() // Refresh held carts list
                 }
                 .onFailure { error ->
-                    _message.value = error.message ?: "Failed to hold cart"
+                    _message.value = error.message ?: "Failed to park sale"
                 }
         }
     }
@@ -162,11 +177,48 @@ class CartViewModel(
         viewModelScope.launch(Dispatchers.Default) {
             retrieveCartUseCase(cartId)
                 .onSuccess {
-                    _message.value = "Cart retrieved"
+                    _message.value = "Sale loaded successfully"
                     updateCartState()
+                    loadHeldCarts() // Refresh held carts list
                 }
                 .onFailure { error ->
-                    _message.value = error.message ?: "Failed to retrieve cart"
+                    _message.value = error.message ?: "Failed to load sale"
+                }
+        }
+    }
+
+    /**
+     * Load all held carts.
+     */
+    fun loadHeldCarts() {
+        viewModelScope.launch(Dispatchers.Default) {
+            _heldCartsState.value = UiState.Loading()
+            getHeldCartsUseCase()
+                .onSuccess { carts ->
+                    _heldCartsState.value = UiState.Success(carts)
+                }
+                .onFailure { error ->
+                    _heldCartsState.value = UiState.Error(
+                        com.theauraflow.pos.core.util.UiText.DynamicString(
+                            error.message ?: "Failed to load parked sales"
+                        )
+                    )
+                }
+        }
+    }
+
+    /**
+     * Delete a held cart.
+     */
+    fun deleteHeldCart(cartId: String) {
+        viewModelScope.launch(Dispatchers.Default) {
+            deleteHeldCartUseCase(cartId)
+                .onSuccess {
+                    _message.value = "Parked sale deleted"
+                    loadHeldCarts() // Refresh list
+                }
+                .onFailure { error ->
+                    _message.value = error.message ?: "Failed to delete parked sale"
                 }
         }
     }
@@ -213,5 +265,6 @@ class CartViewModel(
 
     init {
         updateCartState()
+        loadHeldCarts()
     }
 }

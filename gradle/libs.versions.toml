@@ -31,6 +31,7 @@ flyway = "11.15.0"
 coil3 = "3.3.0"
 voyager = "1.1.0"
 kermit = "2.0.8"
+okio = "3.9.1"
 
 [libraries]
 # Testing
@@ -130,6 +131,9 @@ voyager-bottom-sheet-navigator = { module = "cafe.adriel.voyager:voyager-bottom-
 
 # Logging
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
+
+# Okio (File I/O)
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

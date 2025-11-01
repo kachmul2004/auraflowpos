@@ -25,7 +25,12 @@ data class Product(
     val taxRate: Double = 0.0,
     val isActive: Boolean = true,
     val hasVariations: Boolean = false,
-    val hasModifiers: Boolean = false
+    val hasModifiers: Boolean = false,
+    // Variations (e.g., Small/Medium/Large)
+    val variationType: VariationType? = null,
+    val variations: List<ProductVariation>? = null,
+    // Modifiers (e.g., Extra Shot, Oat Milk)
+    val modifiers: List<Modifier>? = null
 ) {
     /**
      * Check if product is in stock.

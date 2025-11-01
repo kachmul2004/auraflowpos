@@ -122,31 +122,69 @@ fun ReceiptDialog(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         items.forEach { item ->
+                            // Product name with variation
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
+                                val variation = item.variation
                                 Text(
-                                    text = "${item.product.name}",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = buildString {
+                                        append(item.product.name)
+                                        if (variation != null) {
+                                            append(" - ")
+                                            append(variation.name)
+                                        }
+                                    },
+                                    style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
                                     text = "$${item.total.formatCurrency()}",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
+
+                            // Quantity and base price
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(start = 8.dp),
                             ) {
+                                val basePrice = item.variation?.price ?: item.product.price
                                 Text(
-                                    text = "$${item.product.price.formatCurrency()} × ${item.quantity}",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    text = "$${basePrice.formatCurrency()} × ${item.quantity}",
+                                    fontSize = 15.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                            }
+
+                            // Modifiers (if any)
+                            if (item.modifiers.isNotEmpty()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    item.modifiers.forEach { modifier ->
+                                        Text(
+                                            text = buildString {
+                                                append("+ ")
+                                                append(modifier.name)
+                                                if (modifier.quantity > 1) {
+                                                    append(" x${modifier.quantity}")
+                                                }
+                                                if (modifier.price > 0) {
+                                                    append(" (+$${(modifier.price * modifier.quantity).formatCurrency()})")
+                                                }
+                                            },
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

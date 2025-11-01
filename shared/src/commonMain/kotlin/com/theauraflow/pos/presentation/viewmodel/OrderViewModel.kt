@@ -4,6 +4,7 @@ import com.theauraflow.pos.core.util.UiText
 import com.theauraflow.pos.domain.model.Order
 import com.theauraflow.pos.domain.model.OrderStatus
 import com.theauraflow.pos.domain.model.PaymentMethod
+import com.theauraflow.pos.domain.repository.OrderRepository
 import com.theauraflow.pos.domain.repository.OrderStatistics
 import com.theauraflow.pos.domain.usecase.order.CancelOrderUseCase
 import com.theauraflow.pos.domain.usecase.order.CreateOrderUseCase
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -29,6 +31,7 @@ class OrderViewModel(
     private val cancelOrderUseCase: CancelOrderUseCase,
     private val refundOrderUseCase: RefundOrderUseCase,
     private val getOrderStatisticsUseCase: GetOrderStatisticsUseCase,
+    private val orderRepository: OrderRepository,
     private val viewModelScope: CoroutineScope
 ) {
     private val _ordersState = MutableStateFlow<UiState<List<Order>>>(UiState.Loading())
@@ -44,6 +47,12 @@ class OrderViewModel(
     val message: StateFlow<String?> = _message.asStateFlow()
 
     init {
+        // Observe orders from repository for reactive updates
+        viewModelScope.launch(Dispatchers.Default) {
+            orderRepository.observeOrders().collect { orders ->
+                _ordersState.value = UiState.Success(orders)
+            }
+        }
     }
 
     /**
@@ -64,7 +73,7 @@ class OrderViewModel(
             ).onSuccess { order ->
                 _lastCreatedOrder.value = order
                 _message.value = "Order created successfully"
-                // Removed loadTodayOrders() - using local storage
+                // Orders automatically update via observeOrders() flow
             }.onFailure { error ->
                 _message.value = error.message ?: "Failed to create order"
             }
@@ -116,8 +125,8 @@ class OrderViewModel(
             }
 
             result.onSuccess { orders ->
-                    _ordersState.value = UiState.Success(orders)
-                }
+                _ordersState.value = UiState.Success(orders)
+            }
                 .onFailure { error ->
                     _ordersState.value = UiState.Error(
                         UiText.DynamicString(error.message ?: "Failed to load orders")

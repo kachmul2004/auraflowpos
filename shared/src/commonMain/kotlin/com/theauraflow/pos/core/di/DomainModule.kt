@@ -6,7 +6,9 @@ import com.theauraflow.pos.domain.usecase.auth.RefreshTokenUseCase
 import com.theauraflow.pos.domain.usecase.cart.AddToCartUseCase
 import com.theauraflow.pos.domain.usecase.cart.ApplyDiscountUseCase
 import com.theauraflow.pos.domain.usecase.cart.ClearCartUseCase
+import com.theauraflow.pos.domain.usecase.cart.DeleteHeldCartUseCase
 import com.theauraflow.pos.domain.usecase.cart.GetCartTotalsUseCase
+import com.theauraflow.pos.domain.usecase.cart.GetHeldCartsUseCase
 import com.theauraflow.pos.domain.usecase.cart.HoldCartUseCase
 import com.theauraflow.pos.domain.usecase.cart.RemoveFromCartUseCase
 import com.theauraflow.pos.domain.usecase.cart.RetrieveCartUseCase
@@ -26,6 +28,7 @@ import com.theauraflow.pos.domain.usecase.product.GetProductsByCategoryUseCase
 import com.theauraflow.pos.domain.usecase.product.GetProductsUseCase
 import com.theauraflow.pos.domain.usecase.product.SearchProductsUseCase
 import com.theauraflow.pos.domain.repository.CartRepository
+import com.theauraflow.pos.domain.repository.OrderRepository
 import com.theauraflow.pos.presentation.viewmodel.AuthViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
 import com.theauraflow.pos.presentation.viewmodel.CustomerViewModel
@@ -56,6 +59,8 @@ val domainModule = module {
     factoryOf(::GetCartTotalsUseCase)
     factoryOf(::HoldCartUseCase)
     factoryOf(::RetrieveCartUseCase)
+    factoryOf(::GetHeldCartsUseCase)
+    factoryOf(::DeleteHeldCartUseCase)
 
     // Order Use Cases
     factoryOf(::CreateOrderUseCase)
@@ -98,6 +103,8 @@ val domainModule = module {
             getCartTotalsUseCase = get(),
             holdCartUseCase = get(),
             retrieveCartUseCase = get(),
+            getHeldCartsUseCase = get(),
+            deleteHeldCartUseCase = get(),
             viewModelScope = CoroutineScope(Dispatchers.Default)
         )
     }
@@ -119,6 +126,7 @@ val domainModule = module {
             cancelOrderUseCase = get(),
             refundOrderUseCase = get(),
             getOrderStatisticsUseCase = get(),
+            orderRepository = get(),
             viewModelScope = CoroutineScope(Dispatchers.Default)
         )
     }

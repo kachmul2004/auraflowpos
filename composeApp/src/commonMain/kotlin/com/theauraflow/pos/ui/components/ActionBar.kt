@@ -29,7 +29,16 @@ fun ActionBar(
     onTransactions: () -> Unit,
     onReturns: () -> Unit,
     onOrders: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // Plugin buttons (optional)
+    showSplitCheck: Boolean = false,
+    onSplitCheck: () -> Unit = {},
+    cartHasItems: Boolean = false,
+    showCourses: Boolean = false,
+    onCourses: () -> Unit = {},
+    showHeldOrders: Boolean = false,
+    onHeldOrders: () -> Unit = {},
+    heldOrdersCount: Int = 0
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -105,6 +114,103 @@ fun ActionBar(
                     contentColor = Color.White,
                     modifier = Modifier.weight(1f)
                 )
+
+                // Split Check Button - Purple (Plugin, requires items in cart)
+                if (showSplitCheck) {
+                    ActionButton(
+                        onClick = onSplitCheck,
+                        icon = Icons.Default.CallSplit,
+                        label = "Split Check",
+                        backgroundColor = Color(0xFF8B5CF6),
+                        contentColor = Color.White,
+                        enabled = cartHasItems,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Courses Button - Cyan (Plugin, requires items in cart)
+                if (showCourses) {
+                    ActionButton(
+                        onClick = onCourses,
+                        icon = Icons.Default.Restaurant,
+                        label = "Courses",
+                        backgroundColor = Color(0xFF06B6D4),
+                        contentColor = Color.White,
+                        enabled = cartHasItems,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Held Orders Button - Orange (Plugin, shows badge with count)
+                if (showHeldOrders) {
+                    ActionButtonWithBadge(
+                        onClick = onHeldOrders,
+                        icon = Icons.Default.LocalFireDepartment,
+                        label = "Held Orders",
+                        backgroundColor = Color(0xFFF97316),
+                        contentColor = Color.White,
+                        badgeCount = heldOrdersCount,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionButtonWithBadge(
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    backgroundColor: Color,
+    contentColor: Color,
+    badgeCount: Int,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth().height(40.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = backgroundColor,
+                contentColor = contentColor
+            ),
+            shape = RoundedCornerShape(6.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = label,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        // Badge showing count
+        if (badgeCount > 0) {
+            Badge(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = (-4).dp, y = 4.dp),
+                containerColor = MaterialTheme.colorScheme.error
+            ) {
+                Text(
+                    text = badgeCount.toString(),
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onError
+                )
             }
         }
     }
@@ -117,14 +223,18 @@ private fun ActionButton(
     label: String,
     backgroundColor: Color,
     contentColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(40.dp),
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
-            contentColor = contentColor
+            contentColor = contentColor,
+            disabledContainerColor = backgroundColor.copy(alpha = 0.5f),
+            disabledContentColor = contentColor.copy(alpha = 0.5f)
         ),
         shape = RoundedCornerShape(6.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)

@@ -1,8 +1,46 @@
 package com.theauraflow.pos.data.remote.dto
 
 import com.theauraflow.pos.domain.model.CartItem
+import com.theauraflow.pos.domain.model.CartItemModifier
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
+/**
+ * Data Transfer Object for CartItemModifier (modifier with quantity).
+ */
+@Serializable
+data class CartItemModifierDto(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("price") val price: Double,
+    @SerialName("quantity") val quantity: Int = 1,
+    @SerialName("groupId") val groupId: String? = null,
+    @SerialName("groupName") val groupName: String? = null
+)
+
+/**
+ * Convert CartItemModifierDto to domain CartItemModifier model.
+ */
+fun CartItemModifierDto.toDomain(): CartItemModifier = CartItemModifier(
+    id = id,
+    name = name,
+    price = price,
+    quantity = quantity,
+    groupId = groupId,
+    groupName = groupName
+)
+
+/**
+ * Convert domain CartItemModifier to CartItemModifierDto.
+ */
+fun CartItemModifier.toDto(): CartItemModifierDto = CartItemModifierDto(
+    id = id,
+    name = name,
+    price = price,
+    quantity = quantity,
+    groupId = groupId,
+    groupName = groupName
+)
 
 /**
  * Data Transfer Object for CartItem in orders.
@@ -12,7 +50,7 @@ data class CartItemDto(
     @SerialName("id") val id: String,
     @SerialName("product") val product: ProductDto,
     @SerialName("quantity") val quantity: Int,
-    @SerialName("modifiers") val modifiers: List<ModifierDto> = emptyList(),
+    @SerialName("modifiers") val modifiers: List<CartItemModifierDto> = emptyList(),
     @SerialName("discount") val discount: DiscountDto? = null,
     @SerialName("notes") val notes: String? = null
 )

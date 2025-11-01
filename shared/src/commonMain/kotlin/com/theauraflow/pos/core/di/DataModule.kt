@@ -7,6 +7,8 @@ import com.theauraflow.pos.data.repository.OrderRepositoryImpl
 import com.theauraflow.pos.data.repository.ProductRepositoryImpl
 import com.theauraflow.pos.data.repository.InMemoryTokenStorage
 import com.theauraflow.pos.data.repository.TokenStorage
+import com.theauraflow.pos.data.local.LocalStorage
+import com.theauraflow.pos.data.local.InMemoryLocalStorage
 import com.theauraflow.pos.domain.repository.AuthRepository
 import com.theauraflow.pos.domain.repository.CartRepository
 import com.theauraflow.pos.domain.repository.CustomerRepository
@@ -25,10 +27,23 @@ val dataModule = module {
     // Token storage
     single<TokenStorage> { InMemoryTokenStorage() }
 
+    // Local storage (mock implementation - replace with Room/DataStore later)
+    single<LocalStorage> { InMemoryLocalStorage() }
+
     // Repositories
     singleOf(::ProductRepositoryImpl) bind ProductRepository::class
     singleOf(::CustomerRepositoryImpl) bind CustomerRepository::class
-    singleOf(::OrderRepositoryImpl) bind OrderRepository::class
+    single<OrderRepository> {
+        OrderRepositoryImpl(
+            orderApiClient = get(),
+            cartRepository = get(),
+            localStorage = get()
+        )
+    }
     singleOf(::AuthRepositoryImpl) bind AuthRepository::class
-    singleOf(::CartRepositoryImpl) bind CartRepository::class
+    single<CartRepository> {
+        CartRepositoryImpl(
+            localStorage = get()
+        )
+    }
 }

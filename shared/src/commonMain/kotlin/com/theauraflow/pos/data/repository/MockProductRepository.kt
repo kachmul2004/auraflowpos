@@ -1,13 +1,102 @@
 package com.theauraflow.pos.data.repository
 
+import com.theauraflow.pos.domain.model.Modifier
 import com.theauraflow.pos.domain.model.Product
+import com.theauraflow.pos.domain.model.ProductVariation
+import com.theauraflow.pos.domain.model.VariationType
 import com.theauraflow.pos.domain.repository.ProductRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class MockProductRepository : ProductRepository {
+    // Sample modifiers (matching web version)
+    private val coffeeModifiers = listOf(
+        Modifier(id = "7", name = "Extra Shot", price = 1.00),
+        Modifier(id = "8", name = "Oat Milk", price = 0.75),
+        Modifier(id = "9", name = "Whipped Cream", price = 0.50),
+        Modifier(id = "10", name = "Sugar Free", price = 0.0)
+    )
+
+    private val burgerModifiers = listOf(
+        Modifier(id = "1", name = "Extra Cheese", price = 1.50),
+        Modifier(id = "2", name = "Bacon", price = 2.00),
+        Modifier(id = "3", name = "Avocado", price = 1.75),
+        Modifier(id = "4", name = "No Onions", price = 0.0),
+        Modifier(id = "5", name = "Extra Sauce", price = 0.50),
+        Modifier(id = "6", name = "Gluten Free", price = 2.00)
+    )
+
     private val mockProducts = listOf(
+        // Coffee - Has variations (Small/Medium/Large) AND modifiers
+        Product(
+            id = "9",
+            name = "Coffee",
+            price = 3.50, // Base price (Small)
+            sku = "COF-001",
+            barcode = "0123456789098",
+            categoryName = "Coffee",
+            stockQuantity = 100, // Total stock across all variations
+            imageUrl = "https://images.unsplash.com/photo-1640587662002-ae577f8f96dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2ZmZWUlMjBlc3ByZXNzbyUyMGN1cHxlbnwxfHx8fDE3NjE3NDMxNDV8MA&ixlib=rb-4.1.0&q=80&w=400",
+            hasVariations = true,
+            hasModifiers = true,
+            variationType = VariationType(id = "1", name = "Size"),
+            variations = listOf(
+                ProductVariation(
+                    id = "9a",
+                    name = "Small",
+                    price = 3.50,
+                    stockQuantity = 50,
+                    sku = "COF-001-S"
+                ),
+                ProductVariation(
+                    id = "9b",
+                    name = "Medium",
+                    price = 4.50,
+                    stockQuantity = 30,
+                    sku = "COF-001-M"
+                ),
+                ProductVariation(
+                    id = "9c",
+                    name = "Large",
+                    price = 5.50,
+                    stockQuantity = 20,
+                    sku = "COF-001-L"
+                )
+            ),
+            modifiers = coffeeModifiers
+        ),
+        // Beef Burger - Has variations (Single/Double) AND modifiers
+        Product(
+            id = "12",
+            name = "Beef Burger",
+            price = 12.00, // Base price (Single)
+            sku = "RES-001",
+            barcode = "0123456789128",
+            categoryName = "Restaurant",
+            stockQuantity = 50, // Total stock across all variations
+            imageUrl = "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400",
+            hasVariations = true,
+            hasModifiers = true,
+            variationType = VariationType(id = "1", name = "Size"),
+            variations = listOf(
+                ProductVariation(
+                    id = "12a",
+                    name = "Single",
+                    price = 12.00,
+                    stockQuantity = 30,
+                    sku = "RES-001-S"
+                ),
+                ProductVariation(
+                    id = "12b",
+                    name = "Double",
+                    price = 16.00,
+                    stockQuantity = 20,
+                    sku = "RES-001-D"
+                )
+            ),
+            modifiers = burgerModifiers
+        ),
         // Food Category
         Product(
             id = "1",

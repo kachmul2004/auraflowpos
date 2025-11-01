@@ -24,6 +24,28 @@ class UpdateCartItemUseCase(
                 .map { null }
         }
 
+        // Get current cart item
+        val currentCart = cartRepository.getCart().getOrNull() ?: emptyList()
+        val currentItem = currentCart.find { it.id == cartItemId }
+            ?: return Result.failure(IllegalArgumentException("Cart item not found"))
+
+        // If increasing quantity, check available stock
+        if (newQuantity > currentItem.quantity) {
+            val product = currentItem.product
+
+            // Calculate available stock (total - items in cart EXCLUDING current item)
+            val otherItemsQuantity = currentCart
+                .filter { it.product.id == product.id && it.id != cartItemId }
+                .sumOf { it.quantity }
+            val availableStock = product.stockQuantity - otherItemsQuantity
+
+            if (availableStock < newQuantity) {
+                return Result.failure(
+                    IllegalStateException("Insufficient stock. Available: $availableStock")
+                )
+            }
+        }
+
         // Update quantity
         return cartRepository.updateQuantity(cartItemId, newQuantity)
     }
@@ -36,6 +58,16 @@ class UpdateCartItemUseCase(
             .mapCatching { items ->
                 val item = items.find { it.id == cartItemId }
                     ?: throw IllegalArgumentException("Cart item not found")
+
+                // Check available stock before incrementing
+                val otherItemsQuantity = items
+                    .filter { it.product.id == item.product.id && it.id != cartItemId }
+                    .sumOf { it.quantity }
+                val availableStock = item.product.stockQuantity - otherItemsQuantity
+
+                if (availableStock < item.quantity + 1) {
+                    throw IllegalStateException("Insufficient stock. Available: $availableStock")
+                }
 
                 cartRepository.updateQuantity(cartItemId, item.quantity + 1)
                     .getOrThrow()

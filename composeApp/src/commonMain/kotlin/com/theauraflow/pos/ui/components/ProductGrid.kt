@@ -20,12 +20,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.SubcomposeAsyncImage
 import com.theauraflow.pos.domain.model.Product
+import com.theauraflow.pos.domain.model.CartItem
 
 /**
  * Product grid with category filtering and pagination.
@@ -40,6 +42,7 @@ fun ProductGrid(
     searchQuery: String = "",
     onSearchQueryChange: (String) -> Unit = {},
     isDarkTheme: Boolean = false,
+    cartItems: List<CartItem> = emptyList(), // NEW: To calculate available stock
     modifier: Modifier = Modifier
 ) {
     var currentPage by remember { mutableStateOf(1) }
@@ -55,6 +58,12 @@ fun ProductGrid(
     val filteredProducts = remember(products, selectedCategory) {
         if (selectedCategory == "All") products
         else products.filter { it.categoryName == selectedCategory }
+    }
+
+    // Create a map of productId -> quantityInCart for efficient lookup
+    val cartQuantities: Map<String, Int> = remember(cartItems) {
+        cartItems.groupBy { it.product.id }
+            .mapValues { (_, items) -> items.sumOf { it.quantity } }
     }
 
     // Pagination logic
@@ -190,10 +199,12 @@ fun ProductGrid(
             ) {
                 // Show paginated products
                 items(paginatedProducts) { product ->
+                    val quantityInCart = cartQuantities[product.id] ?: 0
                     ProductGridCard(
                         product = product,
                         onClick = { onProductClick(product) },
                         isDarkTheme = isDarkTheme,
+                        quantityInCart = quantityInCart, // Pass quantity in cart
                         modifier = Modifier.height(itemHeight)
                     )
                 }
@@ -276,12 +287,20 @@ private fun ProductGridCard(
     product: Product,
     onClick: () -> Unit,
     isDarkTheme: Boolean = false,
+    quantityInCart: Int = 0, // NEW: Quantity currently in cart
     modifier: Modifier = Modifier
 ) {
-    val stockLevel = product.stockQuantity
+    // Calculate available stock (total stock - quantity in cart)
+    val availableStock = (product.stockQuantity - quantityInCart).coerceAtLeast(0)
+    val isLowStock = availableStock in 1..5
+    val isOutOfStock = availableStock <= 0
 
     Card(
-        onClick = onClick,
+        onClick = {
+            if (!isOutOfStock) { // Only allow clicks if stock is available
+                onClick()
+            }
+        },
         modifier = modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -289,16 +308,19 @@ private fun ProductGridCard(
             containerColor = if (isDarkTheme) Color(0xFF2F2D2D) else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 6.dp
+            defaultElevation = if (isOutOfStock) 0.dp else 2.dp, // No elevation if out of stock
+            pressedElevation = if (isOutOfStock) 0.dp else 6.dp
         ),
         border = if (isDarkTheme) androidx.compose.foundation.BorderStroke(
             width = 1.dp,
             color = Color(0xFF808080) // 50% white for subtle border in dark mode
-        ) else null
+        ) else null,
+        enabled = !isOutOfStock // Disable the card if out of stock
     ) {
         Row(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(if (isOutOfStock) 0.5f else 1f) // Reduce opacity if out of stock
         ) {
             // Left side: Product info (50%)
             Column(
@@ -309,22 +331,24 @@ private fun ProductGridCard(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    // Stock badge at top
+                    // Stock badge at top (shows AVAILABLE stock)
                     Surface(
                         shape = RoundedCornerShape(4.dp),
-                        color = if (stockLevel > 5)
-                            MaterialTheme.colorScheme.secondary
-                        else
-                            MaterialTheme.colorScheme.error,
+                        color = when {
+                            isOutOfStock -> MaterialTheme.colorScheme.error
+                            isLowStock -> Color(0xFFF59E0B) // Amber/Yellow
+                            else -> MaterialTheme.colorScheme.secondary
+                        },
                         modifier = Modifier.padding(bottom = 4.dp)
                     ) {
                         Text(
-                            text = stockLevel.toString(),
+                            text = if (isOutOfStock) "Out" else availableStock.toString(),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (stockLevel > 5)
-                                MaterialTheme.colorScheme.onSecondary
-                            else
-                                MaterialTheme.colorScheme.onError,
+                            color = when {
+                                isOutOfStock -> MaterialTheme.colorScheme.onError
+                                isLowStock -> Color.White
+                                else -> MaterialTheme.colorScheme.onSecondary
+                            },
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }

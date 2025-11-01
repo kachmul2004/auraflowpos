@@ -39,10 +39,12 @@ import com.theauraflow.pos.ui.components.ParkedSalesDialog
 import com.theauraflow.pos.ui.components.ParkedSale
 import com.theauraflow.pos.domain.model.CartItem
 import com.theauraflow.pos.domain.model.PaymentMethod
+import com.theauraflow.pos.ui.dialog.VariationSelectionDialog
 
 // Import new screens for view navigation
 import com.theauraflow.pos.ui.screen.TransactionsScreen
 import com.theauraflow.pos.ui.screen.ReturnsScreen
+import com.theauraflow.pos.ui.screen.OrdersScreen // Import new OrdersScreen
 
 /**
  * Main POS screen matching the exact web version layout.
@@ -95,20 +97,15 @@ fun POSScreen(
     var showParkedSalesDialog by remember { mutableStateOf(false) }
 
     // View navigation
-    var currentView by remember { mutableStateOf("pos") } // "pos", "tables", "transactions", "returns"
+    var currentView by remember { mutableStateOf("pos") } // "pos", "tables", "transactions", "returns", "orders"
 
     // Top bar states
     var isTrainingMode by remember { mutableStateOf(false) }
     var isFullscreen by remember { mutableStateOf(false) }
     var showUserMenu by remember { mutableStateOf(false) }
 
-    // Receipt data
+    // Receipt data - only keep payment data not in Order model
     var completedOrderNumber by remember { mutableStateOf("") }
-    var completedItems by remember { mutableStateOf<List<CartItem>>(emptyList()) }
-    var completedSubtotal by remember { mutableStateOf(0.0) }
-    var completedDiscount by remember { mutableStateOf(0.0) }
-    var completedTax by remember { mutableStateOf(0.0) }
-    var completedTotal by remember { mutableStateOf(0.0) }
     var completedPaymentMethod by remember { mutableStateOf("") }
     var completedAmountReceived by remember { mutableStateOf(0.0) }
 
@@ -131,6 +128,12 @@ fun POSScreen(
         }
     }
 
+    val heldCartsState by cartViewModel.heldCartsState.collectAsState()
+    val heldCarts = when (val s = heldCartsState) {
+        is com.theauraflow.pos.presentation.base.UiState.Success -> s.data
+        else -> emptyList()
+    }
+
     LaunchedEffect(lastCreatedOrder) {
         lastCreatedOrder?.let { order ->
             completedOrderNumber = order.orderNumber
@@ -146,6 +149,13 @@ fun POSScreen(
     }
 
     val focusManager = LocalFocusManager.current
+
+    // Variation/Modifier product dialog state
+    var selectedProductForCustomization by remember {
+        mutableStateOf<com.theauraflow.pos.domain.model.Product?>(
+            null
+        )
+    }
 
     // Show Table Management screen if selected
     if (currentView == "tables") {
@@ -171,6 +181,14 @@ fun POSScreen(
                 // TODO: Process return
                 println("Processing return for order $orderId")
             }
+        )
+        return
+    }
+    // Show Orders screen if selected
+    if (currentView == "orders") {
+        OrdersScreen(
+            orderViewModel = orderViewModel,
+            onBack = { currentView = "pos" }
         )
         return
     }
@@ -286,9 +304,8 @@ fun POSScreen(
                                     horizontalArrangement = Arrangement.spacedBy(3.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.School,
-                                        contentDescription = null,
-                                        tint = Color(0xFFF59E0B),
+                                        Icons.Default.School,
+                                        null,
                                         modifier = Modifier.size(10.dp)
                                     )
                                     Text(
@@ -588,11 +605,18 @@ fun POSScreen(
                             products = filteredProducts,
                             selectedCategory = selectedCategory,
                             onCategoryChange = { selectedCategory = it },
-                            onProductClick = { product -> cartViewModel.addToCart(product) },
+                            onProductClick = { product ->
+                                if (product.hasVariations || product.hasModifiers) {
+                                    selectedProductForCustomization = product
+                                } else {
+                                    cartViewModel.addToCart(product)
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth().weight(1f),
                             searchQuery = searchQuery,
                             onSearchQueryChange = { searchQuery = it },
-                            isDarkTheme = isDarkTheme
+                            isDarkTheme = isDarkTheme,
+                            cartItems = cartItems // Pass cart items for real-time stock calculation
                         )
 
                         // Action bar
@@ -602,7 +626,18 @@ fun POSScreen(
                             onCashDrawer = { showCashDrawerDialog = true },
                             onTransactions = { currentView = "transactions" },
                             onReturns = { currentView = "returns" },
-                            onOrders = { showParkedSalesDialog = true }
+                            onOrders = {
+                                currentView = "orders"
+                            }, // Navigate to orders history page
+                            // Plugin buttons (can be toggled via settings in the future)
+                            showSplitCheck = true, // TODO: Get from settings
+                            onSplitCheck = { /* TODO: Implement split check dialog */ },
+                            cartHasItems = cartItems.isNotEmpty(),
+                            showCourses = true, // TODO: Get from settings
+                            onCourses = { /* TODO: Implement courses dialog */ },
+                            showHeldOrders = true, // TODO: Get from settings
+                            onHeldOrders = { /* TODO: Implement held orders dialog */ },
+                            heldOrdersCount = 0 // TODO: Get from order state
                         )
                     }
 
@@ -637,25 +672,23 @@ fun POSScreen(
                                 "card" -> PaymentMethod.CARD
                                 else -> PaymentMethod.OTHER
                             }
-                            completedItems = cartItems.toList()
-                            completedSubtotal = subtotal
-                            completedDiscount = discount
-                            completedTax = tax
-                            completedTotal = total
-                            completedPaymentMethod = paymentMethodString
-                            completedAmountReceived = amountReceived
+                            // Create order first (this clears cart internally)
                             orderViewModel.createOrder(
                                 customerId = selectedCustomer?.id,
                                 paymentMethod = paymentMethod,
                                 amountPaid = if (paymentMethod == PaymentMethod.CASH) amountReceived else null,
                                 notes = orderNotes
                             )
-                            cartViewModel.clearCart()
-                            completedOrderNumber =
-                                "ORD-${kotlin.random.Random.nextInt(10000, 99999)}"
+                            // Store payment data for receipt
+                            completedPaymentMethod = paymentMethodString
+                            completedAmountReceived = amountReceived
                             showReceiptDialog = true
                             orderNotes = ""
                             customerViewModel.clearSelection()
+                        },
+                        onParkSale = {
+                            cartViewModel.holdCart()
+                            showParkedSalesDialog = true
                         },
                         modifier = Modifier.width(384.dp).fillMaxHeight()
                     )
@@ -671,6 +704,10 @@ fun POSScreen(
 
                 "returns" -> {
                     // ReturnsScreen is rendered above in the early return block.
+                }
+
+                "orders" -> {
+                    // OrdersScreen is rendered above in the early return block.
                 }
             }
         }
@@ -695,11 +732,11 @@ fun POSScreen(
     ReceiptDialog(
         open = showReceiptDialog,
         orderNumber = completedOrderNumber,
-        items = completedItems,
-        subtotal = completedSubtotal,
-        discount = completedDiscount,
-        tax = completedTax,
-        total = completedTotal,
+        items = lastCreatedOrder?.items ?: emptyList(),
+        subtotal = lastCreatedOrder?.subtotal ?: 0.0,
+        discount = lastCreatedOrder?.discount ?: 0.0,
+        tax = lastCreatedOrder?.tax ?: 0.0,
+        total = lastCreatedOrder?.total ?: 0.0,
         paymentMethod = completedPaymentMethod,
         amountReceived = completedAmountReceived,
         onDismiss = { showReceiptDialog = false },
@@ -768,23 +805,57 @@ fun POSScreen(
     // Parked Sales Dialog
     ParkedSalesDialog(
         open = showParkedSalesDialog,
-        parkedSales = emptyList(), // TODO: Get from state
+        parkedSales = heldCarts.map { heldCart ->
+            ParkedSale(
+                id = heldCart.id,
+                timestamp = formatTimestamp(heldCart.createdAt),
+                itemCount = heldCart.itemCount,
+                total = heldCart.total,
+                customerName = heldCart.customerName
+            )
+        },
         currentCartHasItems = cartItems.isNotEmpty(),
         onClose = { showParkedSalesDialog = false },
         onParkCurrent = {
-            // TODO: Park current cart
-            println("Parking current sale")
+            cartViewModel.holdCart()
             showParkedSalesDialog = false
         },
         onLoadSale = { saleId ->
-            // TODO: Load parked sale
-            println("Loading sale: $saleId")
+            cartViewModel.retrieveCart(saleId)
+            showParkedSalesDialog = false
         },
         onDeleteSale = { saleId ->
-            // TODO: Delete parked sale
-            println("Deleting sale: $saleId")
+            cartViewModel.deleteHeldCart(saleId)
         }
     )
+
+    // Temporary dialog for products with variations/modifiers (Phase 2 - will be replaced with full modal)
+    selectedProductForCustomization?.let { product ->
+        VariationSelectionDialog(
+            product = product,
+            onDismiss = { selectedProductForCustomization = null },
+            onAddToCart = { variation, modifiers ->
+                // Add to cart with variation and modifiers
+                cartViewModel.addToCart(product, variation = variation, modifiers = modifiers)
+                selectedProductForCustomization = null
+            },
+            getAvailableStock = { productId, variationId ->
+                // Calculate available stock for the variation
+                if (variationId != null) {
+                    val variation = product.variations?.find { it.id == variationId }
+                    val quantityInCart = cartItems
+                        .filter { it.product.id == productId && it.variation?.id == variationId }
+                        .sumOf { it.quantity }
+                    (variation?.stockQuantity ?: 0) - quantityInCart
+                } else {
+                    val quantityInCart = cartItems
+                        .filter { it.product.id == productId && it.variation == null }
+                        .sumOf { it.quantity }
+                    product.stockQuantity - quantityInCart
+                }
+            }
+        )
+    }
 }
 
 /**
@@ -866,4 +937,14 @@ fun ClockInDialog(
             }
         }
     )
+}
+
+/**
+ * Format timestamp to readable date/time string.
+ * Using simple formatting based on timestamp value.
+ */
+private fun formatTimestamp(timestamp: Long): String {
+    // Simple approach: show relative order
+    val saleNumber = timestamp / 1000L
+    return "Sale #$saleNumber"
 }

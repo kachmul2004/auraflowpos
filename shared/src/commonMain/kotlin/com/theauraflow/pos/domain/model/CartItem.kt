@@ -11,28 +11,39 @@ import kotlinx.serialization.Serializable
 data class CartItem(
     val id: String,
     val product: Product,
+    val variation: ProductVariation? = null, // Selected variation (e.g., "Medium" size)
     val quantity: Int,
-    val modifiers: List<Modifier> = emptyList(),
+    val modifiers: List<CartItemModifier> = emptyList(),
     val discount: Discount? = null,
     val notes: String? = null
 ) {
     /**
+     * Get the effective price (variation price if present, otherwise product price).
+     */
+    private val effectivePrice: Double
+        get() = variation?.price ?: product.price
+
+    /**
      * Calculate base subtotal (price × quantity).
      */
     val baseSubtotal: Double
-        get() = product.price * quantity
+        get() = effectivePrice * quantity
 
     /**
      * Calculate modifiers total.
+     * Each modifier's totalCost already accounts for its quantity (price * modifier.quantity).
+     * This sum will be added to basePrice before multiplying by cart item quantity.
      */
     val modifiersTotal: Double
-        get() = modifiers.sumOf { it.price } * quantity
+        get() = modifiers.sumOf { it.totalCost }
 
     /**
      * Calculate subtotal before discount.
+     * Formula: (effectivePrice + sum of modifiers) * cartItemQuantity
+     * This matches web version: calculateCartItemPrice(basePrice, quantity, modifiers)
      */
     val subtotalBeforeDiscount: Double
-        get() = baseSubtotal + modifiersTotal
+        get() = (effectivePrice + modifiersTotal) * quantity
 
     /**
      * Calculate discount amount.
@@ -71,7 +82,7 @@ data class CartItem(
     /**
      * Create a copy with added modifier.
      */
-    fun withModifier(modifier: Modifier): CartItem =
+    fun withModifier(modifier: CartItemModifier): CartItem =
         copy(modifiers = modifiers + modifier)
 
     /**

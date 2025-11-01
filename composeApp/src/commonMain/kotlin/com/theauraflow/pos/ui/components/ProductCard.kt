@@ -29,7 +29,7 @@ import com.theauraflow.pos.core.util.formatCurrency
  * Design exactly matches the web app:
  * - Left side (50%): Product info (stock, name, price) on light background
  * - Right side (50%): Product image
- * - Stock badge in top-left corner with color coding
+ * - Stock badge in top-left corner with color coding (shows AVAILABLE stock)
  *
  * Stock Badge Colors:
  * - Green: > 10 units (healthy stock)
@@ -38,6 +38,7 @@ import com.theauraflow.pos.core.util.formatCurrency
  *
  * @param product The product to display
  * @param onClick Callback when card is clicked
+ * @param quantityInCart Current quantity of this product in the cart (for real-time stock display)
  * @param allowOutOfStockPurchase Whether to allow adding out-of-stock items (admin mode)
  * @param modifier Modifier for customization
  */
@@ -45,16 +46,20 @@ import com.theauraflow.pos.core.util.formatCurrency
 fun ProductCard(
     product: Product,
     onClick: () -> Unit,
+    quantityInCart: Int = 0,
     allowOutOfStockPurchase: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val isOutOfStock = product.stockQuantity <= 0
-    val isLowStock = product.stockQuantity in 1..10
+    // Calculate available stock (total stock - quantity in cart)
+    val availableStock = (product.stockQuantity - quantityInCart).coerceAtLeast(0)
+
+    val isOutOfStock = availableStock <= 0
+    val isLowStock = availableStock in 1..10
     val isEnabled = allowOutOfStockPurchase || !isOutOfStock
     val colors = MaterialTheme.colorScheme
     val borderRadius = 12.dp
 
-    // Stock badge color based on quantity
+    // Stock badge color based on AVAILABLE quantity
     val stockBadgeColor = when {
         isOutOfStock -> Color(0xFFEF4444) // Red
         isLowStock -> Color(0xFFF59E0B) // Amber/Yellow
@@ -88,7 +93,7 @@ fun ProductCard(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Stock Badge - Top Left with Color Coding
+                    // Stock Badge - Top Left with Color Coding (shows AVAILABLE stock)
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -97,7 +102,7 @@ fun ProductCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = product.stockQuantity.toString(),
+                            text = availableStock.toString(),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White

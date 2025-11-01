@@ -72,8 +72,15 @@ fun CartItemCard(
                         color = colors.onSurfaceVariant
                     )
 
+                    val variation = cartItem.variation
                     Text(
-                        text = cartItem.product.name,
+                        text = buildString {
+                            append(cartItem.product.name)
+                            if (variation != null) {
+                                append(" - ")
+                                append(variation.name)
+                            }
+                        },
                         fontSize = 14.sp,
                         lineHeight = 18.sp,
                         color = colors.onSurface,
@@ -105,8 +112,11 @@ fun CartItemCard(
                                 text = buildString {
                                     append("+ ")
                                     append(modifier.name)
+                                    if (modifier.quantity > 1) {
+                                        append(" x${modifier.quantity}")
+                                    }
                                     if (modifier.price > 0) {
-                                        append(" (+$${modifier.price.formatCurrency()})")
+                                        append(" (+$${(modifier.price * modifier.quantity).formatCurrency()})")
                                     }
                                 },
                                 fontSize = 12.sp,

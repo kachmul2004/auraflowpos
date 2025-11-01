@@ -46,6 +46,9 @@ kotlin {
             implementation(libs.koin.core)
 
             implementation(libs.kermit)
+
+            // Okio for file-based persistence (cross-platform)
+            implementation(libs.okio)
         }
 
         androidMain.dependencies {

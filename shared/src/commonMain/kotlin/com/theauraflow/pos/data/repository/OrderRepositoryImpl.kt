@@ -10,21 +10,70 @@ import com.theauraflow.pos.domain.model.PaymentStatus
 import com.theauraflow.pos.domain.repository.CartRepository
 import com.theauraflow.pos.domain.repository.OrderRepository
 import com.theauraflow.pos.domain.repository.OrderStatistics
+import com.theauraflow.pos.data.local.LocalStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 /**
- * Implementation of OrderRepository.
+ * Implementation of OrderRepository with LocalStorage for persistence.
  */
 class OrderRepositoryImpl(
     private val orderApiClient: OrderApiClient,
-    private val cartRepository: CartRepository
+    private val cartRepository: CartRepository,
+    private val localStorage: LocalStorage
 ) : OrderRepository {
 
     private val _ordersCache = MutableStateFlow<List<Order>>(emptyList())
     private var orderCounter = 1000 // Start from 1000 for order numbers
     private val baseTimestamp = 1704067200000L // Jan 1, 2024
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+        prettyPrint = false
+    }
+
+    companion object {
+        private const val ORDERS_KEY = "orders"
+    }
+
+    init {
+        // Load orders from storage on init
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
+            loadOrdersFromStorage()
+        }
+    }
+
+    private suspend fun loadOrdersFromStorage() {
+        try {
+            val jsonString = localStorage.getString(ORDERS_KEY)
+            if (jsonString != null) {
+                val orders = json.decodeFromString<List<Order>>(jsonString)
+                _ordersCache.value = orders
+
+                // Update counter to avoid order number collisions
+                val maxOrderNumber = orders.mapNotNull {
+                    it.orderNumber.substringAfter("ORD-").toIntOrNull()
+                }.maxOrNull() ?: 999
+                orderCounter = maxOrderNumber + 1
+            }
+        } catch (e: Exception) {
+            // If loading fails, start fresh
+            println("Failed to load orders: ${e.message}")
+        }
+    }
+
+    private suspend fun saveOrdersToStorage() {
+        try {
+            val jsonString = json.encodeToString(_ordersCache.value)
+            localStorage.saveString(ORDERS_KEY, jsonString)
+        } catch (e: Exception) {
+            println("Failed to save orders: ${e.message}")
+        }
+    }
 
     override suspend fun createOrder(
         customerId: String?,
@@ -60,6 +109,9 @@ class OrderRepositoryImpl(
 
             // Add to cache
             _ordersCache.value = listOf(order) + _ordersCache.value
+
+            // Persist to storage
+            saveOrdersToStorage()
 
             Result.success(order)
         } catch (e: Exception) {
@@ -107,6 +159,9 @@ class OrderRepositoryImpl(
             // Update cache with latest orders
             _ordersCache.value = orders
 
+            // Persist to storage
+            saveOrdersToStorage()
+
             Result.success(orders)
         } catch (e: Exception) {
             if (_ordersCache.value.isNotEmpty()) {
@@ -135,6 +190,13 @@ class OrderRepositoryImpl(
         return try {
             val dtos = orderApiClient.getTodaysOrders()
             val orders = dtos.map { it.toDomain() }
+
+            // Update cache with latest orders
+            _ordersCache.value = orders
+
+            // Persist to storage
+            saveOrdersToStorage()
+
             Result.success(orders)
         } catch (e: Exception) {
             if (_ordersCache.value.isNotEmpty()) {
@@ -157,6 +219,9 @@ class OrderRepositoryImpl(
                 if (it.id == updated.id) updated else it
             }
 
+            // Persist to storage
+            saveOrdersToStorage()
+
             Result.success(updated)
         } catch (e: Exception) {
             Result.failure(e)
@@ -176,6 +241,9 @@ class OrderRepositoryImpl(
             _ordersCache.value = _ordersCache.value.map {
                 if (it.id == updated.id) updated else it
             }
+
+            // Persist to storage
+            saveOrdersToStorage()
 
             Result.success(updated)
         } catch (e: Exception) {
@@ -215,6 +283,10 @@ class OrderRepositoryImpl(
             val dtos = orderApiClient.getOrders()
             val orders = dtos.map { it.toDomain() }
             _ordersCache.value = orders
+
+            // Persist to storage
+            saveOrdersToStorage()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
