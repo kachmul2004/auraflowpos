@@ -136,12 +136,12 @@ fun ReceiptDialog(
                                             append(variation.name)
                                         }
                                     },
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
                                     text = "$${item.total.formatCurrency()}",
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -155,7 +155,7 @@ fun ReceiptDialog(
                                 val basePrice = item.variation?.price ?: item.product.price
                                 Text(
                                     text = "$${basePrice.formatCurrency()} × ${item.quantity}",
-                                    fontSize = 15.sp,
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -180,7 +180,7 @@ fun ReceiptDialog(
                                                     append(" (+$${(modifier.price * modifier.quantity).formatCurrency()})")
                                                 }
                                             },
-                                            fontSize = 14.sp,
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }

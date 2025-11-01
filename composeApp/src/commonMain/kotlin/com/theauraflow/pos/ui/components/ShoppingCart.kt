@@ -761,7 +761,7 @@ private fun CartItemButton(
                 ) {
                     Text(
                         text = "${cartItem.quantity}×",
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         color = colors.onSurfaceVariant
                     )
                     val variation = cartItem.variation
@@ -773,7 +773,7 @@ private fun CartItemButton(
                                 append(variation.name)
                             }
                         },
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -781,7 +781,7 @@ private fun CartItemButton(
                 }
                 Text(
                     text = "$${cartItem.total.formatCurrency()}",
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -806,7 +806,7 @@ private fun CartItemButton(
                                     append(" (+$${(modifier.price * modifier.quantity).formatCurrency()})")
                                 }
                             },
-                            fontSize = 8.sp,
+                            fontSize = 9.sp,
                             color = colors.onSurfaceVariant
                         )
                     }
