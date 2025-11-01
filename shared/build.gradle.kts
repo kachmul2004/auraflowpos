@@ -1,10 +1,13 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 kotlin {
@@ -27,7 +30,22 @@ kotlin {
     wasmJs {
         browser()
     }
-    
+
+    // Create an intermediate source set for platforms that support Room
+    // (Android, iOS, JVM) and exclude JS/Wasm
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    applyDefaultHierarchyTemplate {
+        common {
+            group("native") {
+                withAndroidTarget()
+                withJvm()
+                group("ios") {
+                    withIos()
+                }
+            }
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
@@ -51,6 +69,14 @@ kotlin {
             implementation(libs.okio)
         }
 
+        // Native source set: Android + iOS + JVM (platforms that support Room)
+        val nativeMain by getting {
+            dependencies {
+                implementation(libs.room.runtime)
+                implementation(libs.sqlite.bundled)
+            }
+        }
+
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)
@@ -68,10 +94,13 @@ kotlin {
 
         jsMain.dependencies {
             implementation(libs.ktor.client.js)
+            // JS uses IndexedDB (browser native) - no Room support yet
         }
 
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
+            // IndexedDB support (browser storage) - no Room support yet
+            implementation(npm("idb", "8.0.0"))
         }
 
         commonTest.dependencies {
@@ -92,4 +121,19 @@ android {
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
     }
+}
+
+// Room configuration
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+// KSP configuration for Room code generation
+dependencies {
+    // Room compiler for all platforms that support Room
+    add("kspAndroid", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspJvm", libs.room.compiler)
+    // Note: JS/Wasm will be supported in future Room versions
 }

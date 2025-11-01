@@ -20,7 +20,8 @@ ktor = "3.3.1"
 logback = "1.5.20"
 koin = "4.1.1"
 room = "2.8.3"
-ksp = "2.2.21-1.0.29"
+ksp = "2.3.0"
+sqlite = "2.6.1"
 exposed = "0.61.0"
 postgresql = "42.7.8"
 hikaricp = "7.0.2"
@@ -31,7 +32,7 @@ flyway = "11.15.0"
 coil3 = "3.3.0"
 voyager = "1.1.0"
 kermit = "2.0.8"
-okio = "3.9.1"
+okio = "3.16.2"
 
 [libraries]
 # Testing
@@ -109,6 +110,7 @@ bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 
 # Koin DI
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
