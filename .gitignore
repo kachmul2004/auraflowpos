@@ -110,3 +110,6 @@ test-results/
 #firebender
 firebender.json
 /docs/Web Version/
+/composeApp/release/baselineProfiles/0/composeApp-release.dm
+/composeApp/release/baselineProfiles/1/composeApp-release.dm
+/composeApp/release/output-metadata.json
