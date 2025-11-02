@@ -12,6 +12,7 @@ data class HeldCart(
     val name: String? = null,
     val customerId: String? = null,
     val customerName: String? = null,
+    val tableId: String? = null,
     val notes: String? = null,
     val createdAt: Long,
     val subtotal: Double,

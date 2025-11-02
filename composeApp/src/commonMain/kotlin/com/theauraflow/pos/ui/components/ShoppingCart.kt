@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.TableRestaurant
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +46,7 @@ import com.theauraflow.pos.ui.dialog.PaymentDialog
 import com.theauraflow.pos.ui.dialog.CustomerSelectionDialog
 import com.theauraflow.pos.ui.dialog.OrderNotesDialog
 import com.theauraflow.pos.domain.model.Customer
+import com.theauraflow.pos.domain.model.Table
 
 /**
  * Shopping cart sidebar component matching the web design.
@@ -77,6 +80,9 @@ fun ShoppingCart(
     customers: List<Customer> = emptyList(),
     selectedCustomer: Customer? = null,
     onSelectCustomer: (Customer?) -> Unit = {},
+    tableId: String? = null,
+    tables: List<Table> = emptyList(),
+    onChangeTable: () -> Unit = {},
     orderNotes: String = "",
     onSaveNotes: (String) -> Unit = {},
     customerName: String? = null,
@@ -158,11 +164,12 @@ fun ShoppingCart(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Order Type Selector (matching web ShoppingCart.tsx lines 118-142)
+                    // Order Type Selector with inline label (like phone country code)
                     var expanded by remember { mutableStateOf(false) }
                     var selectedOrderType by remember { mutableStateOf("Pickup") } // Changed default to Pickup
+                    var dropdownWidth by remember { mutableStateOf(0) }
 
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
@@ -174,34 +181,88 @@ fun ShoppingCart(
                                 contentColor = colors.onSurface
                             ),
                             border = BorderStroke(1.dp, colors.outline),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            contentPadding = PaddingValues(horizontal = 0.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedOrderType, fontSize = 12.sp)
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                // Left side: "Order Type:" label (non-clickable appearance)
+                                Surface(
+                                    modifier = Modifier.padding(0.dp),
+                                    color = colors.surfaceVariant.copy(alpha = 0.3f),
+                                    shape = RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(
+                                            horizontal = 10.dp,
+                                            vertical = 6.dp
+                                        ),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Order Type:",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = colors.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                // Vertical divider
+                                VerticalDivider(
+                                    modifier = Modifier
+                                        .height(24.dp)
+                                        .width(1.dp),
+                                    color = colors.outline
                                 )
+
+                                // Right side: Selected value + dropdown arrow (track its width)
+                                Row(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(horizontal = 10.dp)
+                                        .onSizeChanged { size ->
+                                            dropdownWidth = size.width
+                                        },
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = selectedOrderType,
+                                        fontSize = 12.sp,
+                                        color = colors.onSurface
+                                    )
+                                    Icon(
+                                        Icons.Default.ArrowDropDown,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = colors.onSurface
+                                    )
+                                }
                             }
                         }
 
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
+                        // Dropdown menu aligned to right side only
+                        Box(
+                            modifier = Modifier.align(Alignment.CenterEnd)
                         ) {
-                            listOf("Delivery", "Dine In", "Takeout", "Pickup").forEach { type ->
-                                DropdownMenuItem(
-                                    text = { Text(type, fontSize = 12.sp) },
-                                    onClick = {
-                                        selectedOrderType = type
-                                        expanded = false
-                                    }
-                                )
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.width(with(androidx.compose.ui.platform.LocalDensity.current) {
+                                    dropdownWidth.toDp()
+                                })
+                            ) {
+                                listOf("Delivery", "Dine In", "Takeout", "Pickup").forEach { type ->
+                                    DropdownMenuItem(
+                                        text = { Text(type, fontSize = 12.sp) },
+                                        onClick = {
+                                            selectedOrderType = type
+                                            expanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -248,6 +309,67 @@ fun ShoppingCart(
                                     color = colors.onSecondary,
                                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                                 )
+                            }
+                        }
+                    }
+
+                    tableId?.let { id ->
+                        val table = tables.find { it.id == id }
+                        if (table != null) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                shape = RoundedCornerShape(6.dp),
+                                color = colors.primaryContainer.copy(alpha = 0.3f),
+                                border = BorderStroke(1.dp, colors.primary.copy(alpha = 0.3f))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.TableRestaurant,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = colors.primary
+                                        )
+                                        Text(
+                                            text = "Table ${table.number}",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = colors.primary
+                                        )
+                                        table.section?.let { section ->
+                                            Text(
+                                                text = "• $section",
+                                                fontSize = 10.sp,
+                                                color = colors.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                    TextButton(
+                                        onClick = onChangeTable,
+                                        contentPadding = PaddingValues(
+                                            horizontal = 8.dp,
+                                            vertical = 2.dp
+                                        ),
+                                        modifier = Modifier.height(24.dp)
+                                    ) {
+                                        Text(
+                                            text = "Change",
+                                            fontSize = 10.sp,
+                                            color = colors.primary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -334,7 +456,10 @@ fun ShoppingCart(
                             .padding(6.dp),
                         verticalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
-                        items(items) { item ->
+                        items(
+                            items = items,
+                            key = { it.id }
+                        ) { item ->
                             CartItemButton(
                                 cartItem = item,
                                 onClick = {

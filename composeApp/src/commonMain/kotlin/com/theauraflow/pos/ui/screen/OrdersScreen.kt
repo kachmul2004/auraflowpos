@@ -31,6 +31,7 @@ import com.theauraflow.pos.presentation.viewmodel.OrderViewModel
 fun OrdersScreen(
     orderViewModel: OrderViewModel,
     onBack: () -> Unit,
+    showBackButton: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val ordersState by orderViewModel.ordersState.collectAsState()
@@ -60,12 +61,14 @@ fun OrdersScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                modifier = Modifier.size(20.dp)
-                            )
+                        if (showBackButton) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                         Column {
                             Text(

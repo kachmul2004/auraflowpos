@@ -29,6 +29,7 @@ fun ReturnsScreen(
     orders: List<ReturnOrder>,
     onBack: () -> Unit,
     onProcessReturn: (orderId: String, itemIds: List<String>, reason: String) -> Unit,
+    showBackButton: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -68,12 +69,14 @@ fun ReturnsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                modifier = Modifier.size(20.dp)
-                            )
+                        if (showBackButton) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                         Column {
                             Text(

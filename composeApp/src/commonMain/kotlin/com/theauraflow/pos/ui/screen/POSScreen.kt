@@ -23,6 +23,8 @@ import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
 import com.theauraflow.pos.presentation.viewmodel.OrderViewModel
 import com.theauraflow.pos.presentation.viewmodel.CustomerViewModel
+import com.theauraflow.pos.presentation.viewmodel.TableViewModel
+import com.theauraflow.pos.presentation.viewmodel.SettingsViewModel
 import com.theauraflow.pos.ui.components.ProductGrid
 import com.theauraflow.pos.ui.components.ShoppingCart
 import com.theauraflow.pos.ui.components.ActionBar
@@ -34,17 +36,18 @@ import com.theauraflow.pos.ui.dialog.EditProfileDialog
 import com.theauraflow.pos.ui.dialog.ShiftStatusDialog
 import com.theauraflow.pos.ui.dialog.QuickSettingsDialog
 import com.theauraflow.pos.ui.dialog.KeyboardShortcutsDialog
-import com.theauraflow.pos.ui.components.CashDrawerDialog
+import com.theauraflow.pos.ui.dialog.CashDrawerDialog
 import com.theauraflow.pos.ui.components.ParkedSalesDialog
 import com.theauraflow.pos.ui.components.ParkedSale
 import com.theauraflow.pos.domain.model.CartItem
 import com.theauraflow.pos.domain.model.PaymentMethod
 import com.theauraflow.pos.ui.dialog.VariationSelectionDialog
+import com.theauraflow.pos.ui.screen.LockScreen
+import com.theauraflow.pos.ui.dialog.SplitCheckDialog
+import com.theauraflow.pos.ui.dialog.CoursesDialog
 
 // Import new screens for view navigation
-import com.theauraflow.pos.ui.screen.TransactionsScreen
-import com.theauraflow.pos.ui.screen.ReturnsScreen
-import com.theauraflow.pos.ui.screen.OrdersScreen // Import new OrdersScreen
+import com.theauraflow.pos.ui.screen.UnifiedHistoryScreen // Import new UnifiedHistoryScreen
 
 /**
  * Main POS screen matching the exact web version layout.
@@ -56,6 +59,8 @@ fun POSScreen(
     cartViewModel: CartViewModel,
     orderViewModel: OrderViewModel,
     customerViewModel: CustomerViewModel,
+    tableViewModel: TableViewModel,
+    settingsViewModel: SettingsViewModel,
     isDarkTheme: Boolean,
     onThemeToggle: () -> Unit,
     onLogout: () -> Unit = {},
@@ -95,9 +100,11 @@ fun POSScreen(
     var showCashDrawerDialog by remember { mutableStateOf(false) }
     var showLockScreen by remember { mutableStateOf(false) }
     var showParkedSalesDialog by remember { mutableStateOf(false) }
+    var showSplitCheckDialog by remember { mutableStateOf(false) }
+    var showCoursesDialog by remember { mutableStateOf(false) }
 
     // View navigation
-    var currentView by remember { mutableStateOf("pos") } // "pos", "tables", "transactions", "returns", "orders"
+    var currentView by remember { mutableStateOf("pos") } // "pos", "tables", "history"
 
     // Top bar states
     var isTrainingMode by remember { mutableStateOf(false) }
@@ -134,6 +141,14 @@ fun POSScreen(
         else -> emptyList()
     }
 
+    val tablesState by tableViewModel.tablesState.collectAsState()
+    val tables = when (val s = tablesState) {
+        is com.theauraflow.pos.presentation.base.UiState.Success -> s.data
+        else -> emptyList()
+    }
+
+    val currentTableId by cartViewModel.tableId.collectAsState()
+
     LaunchedEffect(lastCreatedOrder) {
         lastCreatedOrder?.let { order ->
             completedOrderNumber = order.orderNumber
@@ -160,33 +175,15 @@ fun POSScreen(
     // Show Table Management screen if selected
     if (currentView == "tables") {
         TableManagementScreen(
+            tableViewModel = tableViewModel,
+            cartViewModel = cartViewModel,
             onBack = { currentView = "pos" }
         )
         return
     }
-    // Show Transactions screen if selected
-    if (currentView == "transactions") {
-        TransactionsScreen(
-            transactions = emptyList(), // TODO: Get from shift data
-            onBack = { currentView = "pos" }
-        )
-        return
-    }
-    // Show Returns screen if selected
-    if (currentView == "returns") {
-        ReturnsScreen(
-            orders = emptyList(), // TODO: Get from order history
-            onBack = { currentView = "pos" },
-            onProcessReturn = { orderId, itemIds, reason ->
-                // TODO: Process return
-                println("Processing return for order $orderId")
-            }
-        )
-        return
-    }
-    // Show Orders screen if selected
-    if (currentView == "orders") {
-        OrdersScreen(
+    // Show History screen if selected
+    if (currentView == "history") {
+        UnifiedHistoryScreen(
             orderViewModel = orderViewModel,
             onBack = { currentView = "pos" }
         )
@@ -624,20 +621,16 @@ fun POSScreen(
                             onClockOut = { showShiftDialog = true },
                             onLock = { showLockScreen = true },
                             onCashDrawer = { showCashDrawerDialog = true },
-                            onTransactions = { currentView = "transactions" },
-                            onReturns = { currentView = "returns" },
-                            onOrders = {
-                                currentView = "orders"
-                            }, // Navigate to orders history page
+                            onHistory = { currentView = "history" },
                             // Plugin buttons (can be toggled via settings in the future)
                             showSplitCheck = true, // TODO: Get from settings
-                            onSplitCheck = { /* TODO: Implement split check dialog */ },
+                            onSplitCheck = { showSplitCheckDialog = true },
                             cartHasItems = cartItems.isNotEmpty(),
                             showCourses = true, // TODO: Get from settings
-                            onCourses = { /* TODO: Implement courses dialog */ },
+                            onCourses = { showCoursesDialog = true },
                             showHeldOrders = true, // TODO: Get from settings
-                            onHeldOrders = { /* TODO: Implement held orders dialog */ },
-                            heldOrdersCount = 0 // TODO: Get from order state
+                            onHeldOrders = { showParkedSalesDialog = true },
+                            heldOrdersCount = heldCarts.count()
                         )
                     }
 
@@ -657,6 +650,9 @@ fun POSScreen(
                                 customerViewModel.clearSelection()
                             }
                         },
+                        tableId = currentTableId,
+                        tables = tables,
+                        onChangeTable = { currentView = "tables" },
                         orderNotes = orderNotes,
                         onSaveNotes = { notes -> orderNotes = notes },
                         onUpdateItem = { cartItem, newQuantity, itemDiscount, priceOverride ->
@@ -692,22 +688,6 @@ fun POSScreen(
                         },
                         modifier = Modifier.width(384.dp).fillMaxHeight()
                     )
-                }
-
-                "tables" -> {
-                    // TableManagementScreen is now rendered above in the early return block.
-                }
-
-                "transactions" -> {
-                    // TransactionsScreen is rendered above in the early return block.
-                }
-
-                "returns" -> {
-                    // ReturnsScreen is rendered above in the early return block.
-                }
-
-                "orders" -> {
-                    // OrdersScreen is rendered above in the early return block.
                 }
             }
         }
@@ -767,9 +747,19 @@ fun POSScreen(
 
     // Quick Settings Dialog
     if (showSettingsDialog) {
+        val darkMode by settingsViewModel.darkMode.collectAsState()
+        val soundEnabled by settingsViewModel.soundEnabled.collectAsState()
+        val autoPrint by settingsViewModel.autoPrintReceipts.collectAsState()
+
         QuickSettingsDialog(
             open = showSettingsDialog,
-            onDismiss = { showSettingsDialog = false }
+            autoPrintReceipts = autoPrint,
+            soundEnabled = soundEnabled,
+            darkMode = darkMode,
+            onDismiss = { showSettingsDialog = false },
+            onToggleAutoPrint = { settingsViewModel.toggleAutoPrint() },
+            onToggleSoundEnabled = { settingsViewModel.toggleSound() },
+            onToggleDarkMode = { settingsViewModel.toggleDarkMode() }
         )
     }
 
@@ -782,52 +772,62 @@ fun POSScreen(
     }
 
     // Cash Drawer Dialog
-    CashDrawerDialog(
-        open = showCashDrawerDialog,
-        currentBalance = 100.0, // TODO: Get from shift data
-        isDarkTheme = isDarkTheme,
-        onClose = { showCashDrawerDialog = false },
-        onConfirm = { type, amount, reason ->
-            // TODO: Record cash transaction
-            println("Cash $type: $$amount - $reason")
-            showCashDrawerDialog = false
-        }
-    )
+    if (showCashDrawerDialog) {
+        CashDrawerDialog(
+            show = showCashDrawerDialog,
+            currentBalance = 100.0, // TODO: Get from shift data
+            onDismiss = { showCashDrawerDialog = false },
+            onCashIn = { amount, reason ->
+                // TODO: Record cash in transaction
+                println("Cash In: $$amount - $reason")
+                showCashDrawerDialog = false
+            },
+            onCashOut = { amount, reason ->
+                // TODO: Record cash out transaction
+                println("Cash Out: $$amount - $reason")
+                showCashDrawerDialog = false
+            }
+        )
+    }
 
     // Lock Screen
-    LockScreen(
-        open = showLockScreen,
-        userPin = "123456", // TODO: Get from user data
-        userName = "John Cashier",
-        onUnlock = { showLockScreen = false }
-    )
+    if (showLockScreen) {
+        LockScreen(
+            open = showLockScreen,
+            userPin = "123456", // TODO: Get from user data
+            userName = "John Cashier",
+            onUnlock = { showLockScreen = false }
+        )
+    }
 
     // Parked Sales Dialog
-    ParkedSalesDialog(
-        open = showParkedSalesDialog,
-        parkedSales = heldCarts.map { heldCart ->
-            ParkedSale(
-                id = heldCart.id,
-                timestamp = formatTimestamp(heldCart.createdAt),
-                itemCount = heldCart.itemCount,
-                total = heldCart.total,
-                customerName = heldCart.customerName
-            )
-        },
-        currentCartHasItems = cartItems.isNotEmpty(),
-        onClose = { showParkedSalesDialog = false },
-        onParkCurrent = {
-            cartViewModel.holdCart()
-            showParkedSalesDialog = false
-        },
-        onLoadSale = { saleId ->
-            cartViewModel.retrieveCart(saleId)
-            showParkedSalesDialog = false
-        },
-        onDeleteSale = { saleId ->
-            cartViewModel.deleteHeldCart(saleId)
-        }
-    )
+    if (showParkedSalesDialog) {
+        ParkedSalesDialog(
+            open = showParkedSalesDialog,
+            parkedSales = heldCarts.map { heldCart ->
+                ParkedSale(
+                    id = heldCart.id,
+                    timestamp = formatTimestamp(heldCart.createdAt),
+                    itemCount = heldCart.itemCount,
+                    total = heldCart.total,
+                    customerName = heldCart.customerName
+                )
+            },
+            currentCartHasItems = cartItems.isNotEmpty(),
+            onClose = { showParkedSalesDialog = false },
+            onParkCurrent = {
+                cartViewModel.holdCart()
+                showParkedSalesDialog = false
+            },
+            onLoadSale = { saleId ->
+                cartViewModel.retrieveCart(saleId)
+                showParkedSalesDialog = false
+            },
+            onDeleteSale = { saleId ->
+                cartViewModel.deleteHeldCart(saleId)
+            }
+        )
+    }
 
     // Temporary dialog for products with variations/modifiers (Phase 2 - will be replaced with full modal)
     selectedProductForCustomization?.let { product ->
@@ -854,6 +854,22 @@ fun POSScreen(
                     product.stockQuantity - quantityInCart
                 }
             }
+        )
+    }
+
+    if (showSplitCheckDialog) {
+        SplitCheckDialog(
+            open = showSplitCheckDialog,
+            cartItems = cartItems,
+            onDismiss = { showSplitCheckDialog = false }
+        )
+    }
+
+    if (showCoursesDialog) {
+        CoursesDialog(
+            open = showCoursesDialog,
+            cartItems = cartItems,
+            onDismiss = { showCoursesDialog = false }
         )
     }
 }

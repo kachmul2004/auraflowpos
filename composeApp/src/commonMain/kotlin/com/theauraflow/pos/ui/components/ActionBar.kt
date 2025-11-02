@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.theauraflow.pos.util.Locale
 
 /**
  * Action bar at the bottom of the POS screen.
@@ -26,9 +27,7 @@ fun ActionBar(
     onClockOut: () -> Unit,
     onLock: () -> Unit,
     onCashDrawer: () -> Unit,
-    onTransactions: () -> Unit,
-    onReturns: () -> Unit,
-    onOrders: () -> Unit,
+    onHistory: () -> Unit,
     modifier: Modifier = Modifier,
     // Plugin buttons (optional)
     showSplitCheck: Boolean = false,
@@ -85,32 +84,12 @@ fun ActionBar(
                     modifier = Modifier.weight(1f)
                 )
 
-                // Transactions Button - Pink
+                // History Button - Indigo (combines Orders, Returns, Transactions)
                 ActionButton(
-                    onClick = onTransactions,
-                    icon = Icons.Default.Description,
-                    label = "Transactions",
-                    backgroundColor = Color(0xFFEC4899),
-                    contentColor = Color.White,
-                    modifier = Modifier.weight(1f)
-                )
-
-                // Returns Button - Orange
-                ActionButton(
-                    onClick = onReturns,
-                    icon = Icons.Default.Refresh,
-                    label = "Returns",
-                    backgroundColor = Color(0xFFF97316),
-                    contentColor = Color.White,
-                    modifier = Modifier.weight(1f)
-                )
-
-                // Orders Button - Yellow
-                ActionButton(
-                    onClick = onOrders,
-                    icon = Icons.Default.Pause,
-                    label = "Orders",
-                    backgroundColor = Color(0xFFEAB308),
+                    onClick = onHistory,
+                    icon = Icons.Default.History,
+                    label = "History",
+                    backgroundColor = Color(0xFF6366F1),
                     contentColor = Color.White,
                     modifier = Modifier.weight(1f)
                 )
@@ -120,7 +99,7 @@ fun ActionBar(
                     ActionButton(
                         onClick = onSplitCheck,
                         icon = Icons.Default.CallSplit,
-                        label = "Split Check",
+                        label = Locale.splitCheck,
                         backgroundColor = Color(0xFF8B5CF6),
                         contentColor = Color.White,
                         enabled = cartHasItems,

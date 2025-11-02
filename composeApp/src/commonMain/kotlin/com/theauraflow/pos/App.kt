@@ -9,6 +9,8 @@ import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
 import com.theauraflow.pos.presentation.viewmodel.CartViewModel
 import com.theauraflow.pos.presentation.viewmodel.OrderViewModel
 import com.theauraflow.pos.presentation.viewmodel.CustomerViewModel
+import com.theauraflow.pos.presentation.viewmodel.TableViewModel
+import com.theauraflow.pos.presentation.viewmodel.SettingsViewModel
 import org.koin.compose.koinInject
 
 /**
@@ -28,11 +30,11 @@ private fun AuraFlowApp() {
     val cartViewModel: CartViewModel = koinInject()
     val orderViewModel: OrderViewModel = koinInject()
     val customerViewModel: CustomerViewModel = koinInject()
+    val tableViewModel: TableViewModel = koinInject()
+    val settingsViewModel: SettingsViewModel = koinInject()
 
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
-
-    // Theme state hoisted to App level
-    var isDarkTheme by remember { mutableStateOf(true) }
+    val isDarkTheme by settingsViewModel.darkMode.collectAsState()
 
     AuraFlowTheme(darkTheme = isDarkTheme) {
         if (isLoggedIn) {
@@ -41,8 +43,10 @@ private fun AuraFlowApp() {
                 cartViewModel = cartViewModel,
                 orderViewModel = orderViewModel,
                 customerViewModel = customerViewModel,
+                tableViewModel = tableViewModel,
+                settingsViewModel = settingsViewModel,
                 isDarkTheme = isDarkTheme,
-                onThemeToggle = { isDarkTheme = !isDarkTheme },
+                onThemeToggle = { settingsViewModel.toggleDarkMode() },
                 onLogout = {
                     authViewModel.logout()
                 }

@@ -64,6 +64,10 @@ class CartViewModel(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
+    // Table assignment for restaurant mode
+    private val _tableId = MutableStateFlow<String?>(null)
+    val tableId: StateFlow<String?> = _tableId.asStateFlow()
+
     /**
      * Add product to cart.
      */
@@ -262,6 +266,25 @@ class CartViewModel(
     fun clearMessage() {
         _message.value = null
     }
+
+    /**
+     * Assign current cart to a table.
+     */
+    fun assignToTable(tableId: String) {
+        _tableId.value = tableId
+    }
+
+    /**
+     * Clear table assignment.
+     */
+    fun clearTableAssignment() {
+        _tableId.value = null
+    }
+
+    /**
+     * Get current table ID.
+     */
+    fun getCurrentTableId(): String? = _tableId.value
 
     init {
         updateCartState()

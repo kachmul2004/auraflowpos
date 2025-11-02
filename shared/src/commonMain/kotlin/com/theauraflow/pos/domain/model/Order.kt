@@ -12,6 +12,8 @@ data class Order(
     val items: List<CartItem>,
     val customerId: String? = null,
     val customerName: String? = null,
+    val tableId: String? = null,
+    val tableName: String? = null,
     val subtotal: Double,
     val tax: Double,
     val discount: Double = 0.0,

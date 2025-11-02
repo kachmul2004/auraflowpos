@@ -34,6 +34,8 @@ import com.theauraflow.pos.presentation.viewmodel.CartViewModel
 import com.theauraflow.pos.presentation.viewmodel.CustomerViewModel
 import com.theauraflow.pos.presentation.viewmodel.OrderViewModel
 import com.theauraflow.pos.presentation.viewmodel.ProductViewModel
+import com.theauraflow.pos.presentation.viewmodel.SettingsViewModel
+import com.theauraflow.pos.presentation.viewmodel.TableViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.dsl.factoryOf
@@ -139,6 +141,20 @@ val domainModule = module {
             updateLoyaltyPointsUseCase = get(),
             getTopCustomersUseCase = get(),
             viewModelScope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
+    single {
+        TableViewModel(
+            tableRepository = get(),
+            viewModelScope = CoroutineScope(Dispatchers.Default)
+        )
+    }
+
+    single {
+        SettingsViewModel(
+            settingsRepository = get(),
+            scope = CoroutineScope(Dispatchers.Default)
         )
     }
 }

@@ -5,15 +5,20 @@ import com.theauraflow.pos.data.repository.CartRepositoryImpl
 import com.theauraflow.pos.data.repository.CustomerRepositoryImpl
 import com.theauraflow.pos.data.repository.OrderRepositoryImpl
 import com.theauraflow.pos.data.repository.ProductRepositoryImpl
+import com.theauraflow.pos.data.repository.SettingsRepositoryImpl
+import com.theauraflow.pos.data.repository.TableRepositoryImpl
 import com.theauraflow.pos.data.repository.InMemoryTokenStorage
 import com.theauraflow.pos.data.repository.TokenStorage
 import com.theauraflow.pos.data.local.LocalStorage
-import com.theauraflow.pos.data.local.InMemoryLocalStorage
+import com.theauraflow.pos.data.local.createPlatformLocalStorage
+import com.theauraflow.pos.data.remote.api.OrderApiClient
 import com.theauraflow.pos.domain.repository.AuthRepository
 import com.theauraflow.pos.domain.repository.CartRepository
 import com.theauraflow.pos.domain.repository.CustomerRepository
 import com.theauraflow.pos.domain.repository.OrderRepository
 import com.theauraflow.pos.domain.repository.ProductRepository
+import com.theauraflow.pos.domain.repository.SettingsRepository
+import com.theauraflow.pos.domain.repository.TableRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -27,8 +32,11 @@ val dataModule = module {
     // Token storage
     single<TokenStorage> { InMemoryTokenStorage() }
 
-    // Local storage (mock implementation - replace with Room/DataStore later)
-    single<LocalStorage> { InMemoryLocalStorage() }
+    // Local storage - Platform-specific persistent implementation
+    single<LocalStorage> { createPlatformLocalStorage() }
+
+    // API Clients
+    single { OrderApiClient(client = get()) }
 
     // Repositories
     singleOf(::ProductRepositoryImpl) bind ProductRepository::class
@@ -43,6 +51,12 @@ val dataModule = module {
     singleOf(::AuthRepositoryImpl) bind AuthRepository::class
     single<CartRepository> {
         CartRepositoryImpl(
+            localStorage = get()
+        )
+    }
+    singleOf(::TableRepositoryImpl) bind TableRepository::class
+    single<SettingsRepository> {
+        SettingsRepositoryImpl(
             localStorage = get()
         )
     }
