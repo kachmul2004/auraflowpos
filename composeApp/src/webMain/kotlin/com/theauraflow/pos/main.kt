@@ -4,18 +4,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import com.theauraflow.pos.core.di.appModule
 import com.theauraflow.pos.core.di.mockDataModule
-import org.koin.core.context.startKoin
+import com.theauraflow.pos.di.initializeKoin
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    // Initialize Koin for Web/WASM
-    startKoin {
-        allowOverride(true)
-        modules(
-            appModule,      // Real repos + use cases
-            mockDataModule  // Mock repos (overrides real)
-        )
-    }
+    // Initialize Koin using shared initializer
+    initializeKoin()
 
     ComposeViewport {
         App()

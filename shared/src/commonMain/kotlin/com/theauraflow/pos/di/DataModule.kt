@@ -1,7 +1,9 @@
 package com.theauraflow.pos.di
 
 import com.theauraflow.pos.data.local.InMemoryLocalStorage
+import com.theauraflow.pos.data.local.InMemoryWebStorage
 import com.theauraflow.pos.data.local.LocalStorage
+import com.theauraflow.pos.data.local.WebStorage
 import com.theauraflow.pos.data.remote.api.*
 import com.theauraflow.pos.data.repository.*
 import com.theauraflow.pos.domain.repository.*
@@ -13,16 +15,20 @@ import org.koin.dsl.module
  *
  * Provides:
  * - LocalStorage for in-memory caching
+ * - WebStorage for web platforms (IndexedDB or in-memory)
  * - API clients for remote data
  * - Repository implementations
  *
  * Note: Repositories currently use in-memory storage and API clients.
- * Database integration will be added in the next phase.
+ * Database integration is available on native platforms via databaseModule.
  */
 val dataModule: Module = module {
 
-    // Local Storage
+// Local Storage
     single<LocalStorage> { InMemoryLocalStorage() }
+
+    // Web Storage (for JS/WasmJS platforms)
+    single<WebStorage> { InMemoryWebStorage() }
 
     // Token Storage
     single<TokenStorage> { InMemoryTokenStorage() }

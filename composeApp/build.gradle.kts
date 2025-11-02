@@ -24,6 +24,8 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            binaryOption("bundleId", "com.theauraflow.pos")
+            export(projects.shared)
         }
     }
     
@@ -53,6 +55,7 @@ kotlin {
         iosMain.dependencies {
             // Ktor engine for iOS - REQUIRED for Coil network loading
             implementation(libs.ktor.client.darwin)
+            api(projects.shared)
         }
 
         jvmMain.dependencies {

@@ -1,5 +1,6 @@
 package com.theauraflow.pos.di
 
+import com.theauraflow.pos.core.di.domainModule
 import org.koin.core.module.Module
 
 /**
@@ -11,5 +12,6 @@ import org.koin.core.module.Module
  */
 val appModules = listOf(
     networkModule,
-    dataModule
+    dataModule,
+    domainModule  // ViewModels and use cases
 )

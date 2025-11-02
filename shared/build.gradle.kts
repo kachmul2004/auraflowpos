@@ -16,9 +16,22 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
-    iosArm64()
-    iosSimulatorArm64()
+
+    listOf(
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "shared"
+            isStatic = true
+
+            // Add bundle ID to suppress warning
+            binaryOption("bundleId", "com.theauraflow.pos.shared")
+
+            // Export Koin for iOS
+            export(libs.koin.core)
+        }
+    }
     
     jvm()
     
@@ -85,6 +98,7 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            api(libs.koin.core)
         }
 
         jvmMain.dependencies {
