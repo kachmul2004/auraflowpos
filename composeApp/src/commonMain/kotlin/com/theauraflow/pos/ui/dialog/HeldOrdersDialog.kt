@@ -159,7 +159,10 @@ fun HeldOrdersDialog(
                                 .weight(1f),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(heldOrders) { order ->
+                            items(
+                                items = heldOrders,
+                                key = { it.id }
+                            ) { order ->
                                 HeldOrderCard(
                                     order = order,
                                     onFireOrder = { onFireOrder(order.id) }

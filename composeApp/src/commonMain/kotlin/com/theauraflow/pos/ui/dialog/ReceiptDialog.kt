@@ -41,6 +41,20 @@ fun ReceiptDialog(
     onPrint: () -> Unit,
     onEmail: () -> Unit
 ) {
+    // Debug logging
+    LaunchedEffect(open) {
+        if (open) {
+            println("📄 ReceiptDialog opened")
+            println("   Order: $orderNumber")
+            println("   Items: ${items.size}")
+            items.forEach { item ->
+                println("     - ${item.product.name} x${item.quantity}")
+            }
+            println("   Total: $$total")
+            println("   Payment: $paymentMethod, Received: $$amountReceived")
+        }
+    }
+
     if (open) {
         Dialog(
             onDismissRequest = onDismiss,

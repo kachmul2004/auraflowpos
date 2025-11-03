@@ -1,5 +1,7 @@
 package com.theauraflow.pos.ui.dialog
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -19,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.theauraflow.pos.util.MoneyUtils
 
 /**
  * Payment dialog for processing transactions.
@@ -51,8 +55,9 @@ fun PaymentDialog(
     val isCashPayment = selectedPaymentMethod == 0
 
     val receivedAmount = amountReceived.toDoubleOrNull() ?: 0.0
-    val changeDue = if (isCashPayment) (receivedAmount - total).coerceAtLeast(0.0) else 0.0
+    val changeDue = if (isCashPayment && receivedAmount >= total) (receivedAmount - total) else 0.0
     val isPaymentValid = if (isCashPayment) receivedAmount >= total else true
+    val isAmountEntered = amountReceived.isNotBlank() && receivedAmount > 0.0
 
     // Reset amount when dialog opens/closes
     LaunchedEffect(open) {
@@ -78,10 +83,15 @@ fun PaymentDialog(
                 shape = MaterialTheme.shapes.large,
                 tonalElevation = 6.dp
             ) {
+                val focusManager = LocalFocusManager.current
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { focusManager.clearFocus() }
                         .padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
@@ -127,7 +137,7 @@ fun PaymentDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text("Subtotal:", fontSize = 14.sp)
-                                Text("$${subtotal.formatPrice()}", fontSize = 14.sp)
+                                Text(MoneyUtils.formatWithSymbol(subtotal), fontSize = 14.sp)
                             }
 
                             // Discount
@@ -138,7 +148,7 @@ fun PaymentDialog(
                                 ) {
                                     Text("Discount:", fontSize = 14.sp)
                                     Text(
-                                        "-$${discount.formatPrice()}",
+                                        "-${MoneyUtils.formatWithSymbol(discount)}",
                                         fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.error
                                     )
@@ -151,7 +161,7 @@ fun PaymentDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text("Tax:", fontSize = 14.sp)
-                                Text("$${tax.formatPrice()}", fontSize = 14.sp)
+                                Text(MoneyUtils.formatWithSymbol(tax), fontSize = 14.sp)
                             }
 
                             HorizontalDivider(
@@ -170,7 +180,7 @@ fun PaymentDialog(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    "$${total.formatPrice()}",
+                                    MoneyUtils.formatWithSymbol(total),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -216,7 +226,9 @@ fun PaymentDialog(
                             amountReceived = amountReceived,
                             onAmountChange = { amountReceived = it },
                             total = total,
-                            changeDue = changeDue
+                            changeDue = changeDue,
+                            isAmountEntered = isAmountEntered,
+                            receivedAmount = receivedAmount
                         )
 
                         1 -> CardPaymentContent()
@@ -268,7 +280,9 @@ private fun CashPaymentContent(
     amountReceived: String,
     onAmountChange: (String) -> Unit,
     total: Double,
-    changeDue: Double
+    changeDue: Double,
+    isAmountEntered: Boolean,
+    receivedAmount: Double
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -318,7 +332,7 @@ private fun CashPaymentContent(
                     }
                 }
                 OutlinedButton(
-                    onClick = { onAmountChange(total.toString()) },
+                    onClick = { onAmountChange(MoneyUtils.format(total)) },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Exact")
@@ -326,37 +340,62 @@ private fun CashPaymentContent(
             }
         }
 
-        // Change Due Card
+        // Change Due Card - ALWAYS VISIBLE with LARGE text
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = if (changeDue < 0) {
+                containerColor = if (amountReceived.isBlank() || receivedAmount == 0.0) {
+                    MaterialTheme.colorScheme.surfaceVariant
+                } else if (receivedAmount < total) {
                     MaterialTheme.colorScheme.errorContainer
                 } else {
-                    MaterialTheme.colorScheme.primaryContainer
+                    Color(0xFF22C55E).copy(alpha = 0.2f) // Bright green background
                 }
-            )
+            ),
+            elevation = CardDefaults.cardElevation(4.dp)
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    "Change Due:",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    "$${changeDue.formatPrice()}",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (changeDue < 0) {
-                        MaterialTheme.colorScheme.error
+                    if (amountReceived.isBlank() || receivedAmount == 0.0) {
+                        "Enter amount to see change"
+                    } else if (receivedAmount < total) {
+                        "INSUFFICIENT PAYMENT"
                     } else {
-                        MaterialTheme.colorScheme.primary
+                        "CHANGE DUE"
+                    },
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (receivedAmount < total && receivedAmount > 0.0) {
+                        MaterialTheme.colorScheme.error
+                    } else if (receivedAmount >= total) {
+                        Color(0xFF22C55E) // Bright green text
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+
+                Text(
+                    if (amountReceived.isBlank() || receivedAmount == 0.0) {
+                        "$0.00"
+                    } else if (receivedAmount < total) {
+                        "-${MoneyUtils.formatWithSymbol(total - receivedAmount)}"
+                    } else {
+                        MoneyUtils.formatWithSymbol(changeDue)
+                    },
+                    fontSize = 32.sp, // VERY LARGE - impossible to miss
+                    fontWeight = FontWeight.Black,
+                    color = if (receivedAmount < total && receivedAmount > 0.0) {
+                        MaterialTheme.colorScheme.error
+                    } else if (receivedAmount >= total) {
+                        Color(0xFF22C55E) // Bright green
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
                     }
                 )
             }
@@ -412,15 +451,3 @@ private fun OtherPaymentContent() {
     }
 }
 
-/**
- * Format double to 2 decimal places.
- */
-private fun Double.formatPrice(): String {
-    val str = this.toString()
-    return if (str.contains('.')) {
-        val parts = str.split('.')
-        "${parts[0]}.${parts[1].padEnd(2, '0').take(2)}"
-    } else {
-        "$str.00"
-    }
-}

@@ -7,6 +7,7 @@ import com.theauraflow.pos.data.repository.OrderRepositoryImpl
 import com.theauraflow.pos.data.repository.ProductRepositoryImpl
 import com.theauraflow.pos.data.repository.SettingsRepositoryImpl
 import com.theauraflow.pos.data.repository.TableRepositoryImpl
+import com.theauraflow.pos.data.repository.TransactionRepositoryImpl
 import com.theauraflow.pos.data.repository.InMemoryTokenStorage
 import com.theauraflow.pos.data.repository.TokenStorage
 import com.theauraflow.pos.data.local.LocalStorage
@@ -19,6 +20,7 @@ import com.theauraflow.pos.domain.repository.OrderRepository
 import com.theauraflow.pos.domain.repository.ProductRepository
 import com.theauraflow.pos.domain.repository.SettingsRepository
 import com.theauraflow.pos.domain.repository.TableRepository
+import com.theauraflow.pos.domain.repository.TransactionRepository
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -57,6 +59,11 @@ val dataModule = module {
     singleOf(::TableRepositoryImpl) bind TableRepository::class
     single<SettingsRepository> {
         SettingsRepositoryImpl(
+            localStorage = get()
+        )
+    }
+    single<TransactionRepository> {
+        TransactionRepositoryImpl(
             localStorage = get()
         )
     }

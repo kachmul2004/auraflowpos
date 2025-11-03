@@ -1,6 +1,7 @@
 package com.theauraflow.pos.ui.screen
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +38,9 @@ fun ReturnsScreen(
     var selectedOrder by remember { mutableStateOf<ReturnOrder?>(null) }
     var selectedItems by remember { mutableStateOf<Set<String>>(emptySet()) }
     var returnReason by remember { mutableStateOf("") }
+
+    val focusManager = LocalFocusManager.current
+    val interactionSource = remember { MutableInteractionSource() }
 
     val filteredOrders = remember(orders, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -101,6 +106,12 @@ fun ReturnsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(24.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
+                    focusManager.clearFocus()
+                }
         ) {
             Box(
                 modifier = Modifier
@@ -157,7 +168,10 @@ fun ReturnsScreen(
                                 verticalArrangement = Arrangement.spacedBy(16.dp),
                                 contentPadding = PaddingValues(bottom = 24.dp)
                             ) {
-                                items(filteredOrders) { order ->
+                                items(
+                                    items = filteredOrders,
+                                    key = { it.id }
+                                ) { order ->
                                     OrderSearchCard(
                                         order = order,
                                         onClick = { selectedOrder = order }
@@ -237,7 +251,10 @@ fun ReturnsScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    items(order.items) { item ->
+                                    items(
+                                        items = order.items,
+                                        key = { it.id }
+                                    ) { item ->
                                         ReturnItemCard(
                                             item = item,
                                             isSelected = selectedItems.contains(item.id),

@@ -1,9 +1,12 @@
 package com.theauraflow.pos.server
 
 import com.theauraflow.pos.server.plugins.*
+import com.theauraflow.pos.server.di.serverModule
+import com.theauraflow.pos.di.appModules
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import org.koin.core.context.startKoin
 
 fun main() {
     embeddedServer(
@@ -16,9 +19,15 @@ fun main() {
 
 /**
  * Main application module.
- * Configures all Ktor plugins and routing.
+ * Configures DI, Ktor plugins, routing, and database.
  */
 fun Application.module() {
+    // Start Koin DI with shared modules + server module
+    startKoin {
+        allowOverride(true)
+        modules(appModules + listOf(serverModule))
+    }
+
     // Configure plugins
     configureContentNegotiation()
     configureCORS()
@@ -30,6 +39,6 @@ fun Application.module() {
     // Configure routing
     configureRouting()
 
-    // Initialize database
+    // Initialize database (PostgreSQL via Exposed)
     configureDatabase()
 }

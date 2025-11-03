@@ -150,13 +150,16 @@ fun TablesDialog(
 
                 // Table Grid
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 150.dp),
+                    columns = GridCells.Adaptive(minSize = 160.dp),
+                    modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(24.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.weight(1f)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(tables) { table ->
+                    items(
+                        items = tables,
+                        key = { it.id }
+                    ) { table ->
                         TableCard(
                             table = table,
                             onClick = {

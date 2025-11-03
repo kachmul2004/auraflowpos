@@ -31,6 +31,11 @@ fun UnifiedHistoryScreen(
         TabInfo("Transactions", Icons.Default.Receipt)
     )
 
+    // Load transactions when screen is opened
+    LaunchedEffect(Unit) {
+        orderViewModel.loadTransactions()
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         // Header with back button
         Surface(
@@ -76,7 +81,7 @@ fun UnifiedHistoryScreen(
             when (selectedTab) {
                 0 -> OrdersTab(orderViewModel)
                 1 -> ReturnsTab(orderViewModel)
-                2 -> TransactionsTab()
+                2 -> TransactionsTab(orderViewModel)
             }
         }
     }
@@ -131,9 +136,17 @@ private fun ReturnsTab(orderViewModel: OrderViewModel) {
 }
 
 @Composable
-private fun TransactionsTab() {
+private fun TransactionsTab(orderViewModel: OrderViewModel) {
+    val transactionsState by orderViewModel.transactionsState.collectAsState()
+    val transactions = remember(transactionsState) {
+        when (val state = transactionsState) {
+            is com.theauraflow.pos.presentation.base.UiState.Success -> state.data
+            else -> emptyList()
+        }
+    }
+
     TransactionsScreen(
-        transactions = emptyList(), // TODO: Get from shift data
+        transactions = transactions,
         onBack = {}, // No back button needed - handled by parent
         showBackButton = false
     )

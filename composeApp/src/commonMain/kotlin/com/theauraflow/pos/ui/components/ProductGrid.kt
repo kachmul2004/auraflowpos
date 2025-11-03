@@ -426,14 +426,16 @@ private fun ProductGridCard(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
                         loading = {
-                            // Show loading indicator while image loads
+                            // Static placeholder - no animation for better performance
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.primary
+                                Icon(
+                                    imageVector = getCategoryIconForProduct(product.categoryName),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                    modifier = Modifier.size(48.dp)
                                 )
                             }
                         },

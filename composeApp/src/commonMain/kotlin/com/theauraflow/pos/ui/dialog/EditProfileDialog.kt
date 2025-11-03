@@ -1,5 +1,7 @@
 package com.theauraflow.pos.ui.dialog
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -11,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -45,6 +48,7 @@ fun EditProfileDialog(
     var showPinAuthDialog by remember { mutableStateOf(false) }
     var showChangePinDialog by remember { mutableStateOf(false) }
     var pinAuthAction by remember { mutableStateOf("view") } // "view" or "change"
+    val focusManager = LocalFocusManager.current
 
     // Reset visibility when dialog closes
     LaunchedEffect(open) {
@@ -83,6 +87,10 @@ fun EditProfileDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { focusManager.clearFocus() }
                     .padding(24.dp)
             ) {
                 // Header

@@ -33,5 +33,5 @@ plugins {
 }
 
 include(":composeApp")
-// include(":server")  // Temporarily disabled to fix Gradle build; server module has unresolved references
+include(":server")
 include(":shared")

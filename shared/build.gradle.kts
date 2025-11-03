@@ -109,6 +109,7 @@ kotlin {
         jsMain.dependencies {
             implementation(libs.ktor.client.js)
             // JS uses IndexedDB (browser native) - no Room support yet
+            implementation(libs.indexeddb)
         }
 
         wasmJsMain.dependencies {

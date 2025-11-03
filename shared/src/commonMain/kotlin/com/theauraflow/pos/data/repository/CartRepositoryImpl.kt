@@ -10,6 +10,7 @@ import com.theauraflow.pos.domain.model.ProductVariation
 import com.theauraflow.pos.domain.repository.CartRepository
 import com.theauraflow.pos.data.local.LocalStorage
 import com.theauraflow.pos.domain.repository.CartTotals
+import com.theauraflow.pos.util.MoneyUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -237,10 +238,11 @@ class CartRepositoryImpl(
     override suspend fun getCartTotals(): Result<CartTotals> {
         return try {
             val items = _cart.value
-            val subtotal = items.sumOf { it.subtotal }
-            val tax = items.sumOf { it.taxAmount }
-            val discount = items.sumOf { it.discountAmount }
-            val total = items.sumOf { it.total }
+            // Use MoneyUtils to sum with proper rounding
+            val subtotal = MoneyUtils.sum(items.map { it.subtotal })
+            val tax = MoneyUtils.sum(items.map { it.taxAmount })
+            val discount = MoneyUtils.sum(items.map { it.discountAmount })
+            val total = MoneyUtils.sum(items.map { it.total })
             val itemCount = items.sumOf { it.quantity }
 
             val totals = CartTotals(
@@ -262,11 +264,11 @@ class CartRepositoryImpl(
             val cartId = Uuid.random().toString()
             val items = _cart.value
 
-            // Calculate totals
-            val subtotal = items.sumOf { it.subtotal }
-            val tax = items.sumOf { it.taxAmount }
-            val discount = items.sumOf { it.discountAmount }
-            val total = items.sumOf { it.total }
+            // Calculate totals with proper rounding
+            val subtotal = MoneyUtils.sum(items.map { it.subtotal })
+            val tax = MoneyUtils.sum(items.map { it.taxAmount })
+            val discount = MoneyUtils.sum(items.map { it.discountAmount })
+            val total = MoneyUtils.sum(items.map { it.total })
 
             val heldCart = HeldCart(
                 id = cartId,

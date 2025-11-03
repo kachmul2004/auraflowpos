@@ -20,10 +20,12 @@ import com.theauraflow.pos.domain.usecase.customer.SearchCustomersUseCase
 import com.theauraflow.pos.domain.usecase.customer.UpdateLoyaltyPointsUseCase
 import com.theauraflow.pos.domain.usecase.order.CancelOrderUseCase
 import com.theauraflow.pos.domain.usecase.order.CreateOrderUseCase
+import com.theauraflow.pos.domain.usecase.order.DeleteOrderUseCase
 import com.theauraflow.pos.domain.usecase.order.GetOrderStatisticsUseCase
 import com.theauraflow.pos.domain.usecase.order.GetOrdersUseCase
 import com.theauraflow.pos.domain.usecase.order.GetTodayOrdersUseCase
 import com.theauraflow.pos.domain.usecase.order.RefundOrderUseCase
+import com.theauraflow.pos.domain.usecase.order.VerifyAdminPasswordUseCase
 import com.theauraflow.pos.domain.usecase.product.GetProductsByCategoryUseCase
 import com.theauraflow.pos.domain.usecase.product.GetProductsUseCase
 import com.theauraflow.pos.domain.usecase.product.SearchProductsUseCase
@@ -71,6 +73,8 @@ val domainModule = module {
     factoryOf(::CancelOrderUseCase)
     factoryOf(::RefundOrderUseCase)
     factoryOf(::GetOrderStatisticsUseCase)
+    factoryOf(::DeleteOrderUseCase)
+    factory { VerifyAdminPasswordUseCase() }
 
     // Customer Use Cases
     factoryOf(::SearchCustomersUseCase)
@@ -128,7 +132,10 @@ val domainModule = module {
             cancelOrderUseCase = get(),
             refundOrderUseCase = get(),
             getOrderStatisticsUseCase = get(),
+            deleteOrderUseCase = get(),
+            verifyAdminPasswordUseCase = get(),
             orderRepository = get(),
+            transactionRepository = get(),
             viewModelScope = CoroutineScope(Dispatchers.Default)
         )
     }

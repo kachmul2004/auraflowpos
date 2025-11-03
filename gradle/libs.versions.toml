@@ -33,6 +33,7 @@ coil3 = "3.3.0"
 voyager = "1.1.0"
 kermit = "2.0.8"
 okio = "3.16.2"
+indexeddb = "0.10.0"
 
 [libraries]
 # Testing
@@ -136,6 +137,9 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 
 # Okio (File I/O)
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+
+# IndexedDB
+indexeddb = { module = "com.juul.indexeddb:core", version.ref = "indexeddb" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -1,5 +1,6 @@
 package com.theauraflow.pos.domain.model
 
+import com.theauraflow.pos.util.MoneyUtils
 import kotlinx.serialization.Serializable
 
 /**
@@ -16,9 +17,10 @@ data class Discount(
 ) {
     /**
      * Calculate discount amount based on the original amount.
+     * Uses MoneyUtils for proper rounding to avoid precision errors.
      *
      * @param amount The original amount before discount
-     * @return The discount amount
+     * @return The discount amount (properly rounded to 2 decimals)
      */
     fun calculateDiscount(amount: Double): Double {
         if (!isActive || amount <= 0) return 0.0
@@ -26,20 +28,25 @@ data class Discount(
         return when (type) {
             DiscountType.PERCENTAGE -> {
                 val discountPercent = value.coerceIn(0.0, 100.0)
-                amount * (discountPercent / 100.0)
+                // Use MoneyUtils to calculate percentage with proper rounding
+                MoneyUtils.calculatePercentage(amount, discountPercent / 100.0)
             }
 
             DiscountType.FIXED_AMOUNT -> {
-                value.coerceAtMost(amount)
+                // Ensure fixed amount is rounded and doesn't exceed the total
+                val roundedValue = MoneyUtils.roundToTwoDecimals(value)
+                roundedValue.coerceAtMost(amount)
             }
         }
     }
 
     /**
      * Calculate final amount after discount.
+     * Uses MoneyUtils for proper rounding.
      */
     fun applyTo(amount: Double): Double {
-        return (amount - calculateDiscount(amount)).coerceAtLeast(0.0)
+        val discountAmount = calculateDiscount(amount)
+        return MoneyUtils.subtract(amount, discountAmount).coerceAtLeast(0.0)
     }
 }
 

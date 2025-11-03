@@ -3,6 +3,7 @@ package com.theauraflow.pos.server.plugins
 import com.theauraflow.pos.server.routes.authRoutes
 import com.theauraflow.pos.server.routes.healthRoutes
 import com.theauraflow.pos.server.routes.productRoutes
+import com.theauraflow.pos.server.routes.syncRoutes
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
@@ -21,6 +22,9 @@ fun Application.configureRouting() {
         route("/api") {
             // Product management
             productRoutes()
+
+            // Sync endpoints
+            syncRoutes()
 
             // TODO: Add more routes as we implement features
             // orderRoutes()

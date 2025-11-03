@@ -144,7 +144,10 @@ fun SplitCheckDialog(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(cartItems) { item ->
+                    items(
+                        items = cartItems,
+                        key = { it.id }
+                    ) { item ->
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant

@@ -113,7 +113,10 @@ fun CheckoutScreen(
                         )
                     }
 
-                    items(items) { item ->
+                    items(
+                        items = items,
+                        key = { it.id }
+                    ) { item ->
                         CartItemCard(
                             cartItem = item,
                             onClick = {

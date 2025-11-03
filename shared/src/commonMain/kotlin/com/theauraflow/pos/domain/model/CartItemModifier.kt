@@ -1,5 +1,6 @@
 package com.theauraflow.pos.domain.model
 
+import com.theauraflow.pos.util.MoneyUtils
 import kotlinx.serialization.Serializable
 
 /**
@@ -18,10 +19,10 @@ data class CartItemModifier(
     val groupName: String? = null
 ) {
     /**
-     * Calculate total cost for this modifier (price × quantity).
+     * Calculate total cost for this modifier (price × quantity) with proper rounding.
      */
     val totalCost: Double
-        get() = price * quantity
+        get() = MoneyUtils.multiply(price, quantity.toDouble())
 
     /**
      * Check if modifier has additional cost.

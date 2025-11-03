@@ -1,11 +1,17 @@
 package com.theauraflow.pos.domain.model
 
+import com.theauraflow.pos.util.MoneyUtils
 import kotlinx.serialization.Serializable
 
 /**
  * Domain model representing an item in the shopping cart.
  *
  * Contains product information along with quantity and any applied modifications.
+ *
+ * All monetary calculations use MoneyUtils to ensure:
+ * - Proper rounding to 2 decimal places at every step
+ * - No floating-point precision errors
+ * - Compliance with accounting standards
  */
 @Serializable
 data class CartItem(
@@ -24,50 +30,56 @@ data class CartItem(
         get() = variation?.price ?: product.price
 
     /**
-     * Calculate base subtotal (price × quantity).
+     * Calculate base subtotal (price × quantity) with proper rounding.
      */
     val baseSubtotal: Double
-        get() = effectivePrice * quantity
+        get() = MoneyUtils.multiply(effectivePrice, quantity.toDouble())
 
     /**
-     * Calculate modifiers total.
+     * Calculate modifiers total with proper rounding.
      * Each modifier's totalCost already accounts for its quantity (price * modifier.quantity).
      * This sum will be added to basePrice before multiplying by cart item quantity.
      */
     val modifiersTotal: Double
-        get() = modifiers.sumOf { it.totalCost }
+        get() = MoneyUtils.sum(modifiers.map { it.totalCost })
 
     /**
-     * Calculate subtotal before discount.
+     * Calculate subtotal before discount with proper rounding.
      * Formula: (effectivePrice + sum of modifiers) * cartItemQuantity
      * This matches web version: calculateCartItemPrice(basePrice, quantity, modifiers)
      */
     val subtotalBeforeDiscount: Double
-        get() = (effectivePrice + modifiersTotal) * quantity
+        get() {
+            val priceWithModifiers = MoneyUtils.add(effectivePrice, modifiersTotal)
+            val result = MoneyUtils.multiply(priceWithModifiers, quantity.toDouble())
+            // Debug: Print calculation steps
+            println("CartItem[${product.name}]: price=$effectivePrice, modifiers=$modifiersTotal, qty=$quantity, result=$result")
+            return result
+        }
 
     /**
-     * Calculate discount amount.
+     * Calculate discount amount with proper rounding.
      */
     val discountAmount: Double
         get() = discount?.calculateDiscount(subtotalBeforeDiscount) ?: 0.0
 
     /**
-     * Calculate final subtotal after discount.
+     * Calculate final subtotal after discount with proper rounding.
      */
     val subtotal: Double
-        get() = subtotalBeforeDiscount - discountAmount
+        get() = MoneyUtils.subtract(subtotalBeforeDiscount, discountAmount)
 
     /**
-     * Calculate tax for this item.
+     * Calculate tax for this item with proper rounding.
      */
     val taxAmount: Double
-        get() = subtotal * product.taxRate
+        get() = MoneyUtils.calculatePercentage(subtotal, product.taxRate)
 
     /**
-     * Calculate total including tax.
+     * Calculate total including tax with proper rounding.
      */
     val total: Double
-        get() = subtotal + taxAmount
+        get() = MoneyUtils.add(subtotal, taxAmount)
 
     /**
      * Check if quantity is valid.

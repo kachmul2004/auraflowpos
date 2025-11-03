@@ -1,5 +1,6 @@
 package com.theauraflow.pos.domain.model
 
+import com.theauraflow.pos.util.MoneyUtils
 import kotlinx.serialization.Serializable
 
 /**
@@ -45,15 +46,23 @@ data class Product(
         get() = stockQuantity <= minStockLevel
 
     /**
-     * Calculate price with tax.
+     * Calculate price including tax.
      */
-    fun priceWithTax(): Double = price * (1 + taxRate)
+    fun priceWithTax(): Double {
+        val taxAmount = MoneyUtils.calculatePercentage(price, taxRate)
+        return MoneyUtils.add(price, taxAmount)
+    }
 
     /**
-     * Calculate profit margin.
+     * Calculate profit margin percentage.
+     * Returns null if cost is not set.
      */
     fun profitMargin(): Double? {
-        return cost?.let { (price - it) / price * 100 }
+        return cost?.let {
+            val profit = MoneyUtils.subtract(price, it)
+            val margin = (profit / price) * 100.0
+            MoneyUtils.roundToTwoDecimals(margin)
+        }
     }
 
     /**

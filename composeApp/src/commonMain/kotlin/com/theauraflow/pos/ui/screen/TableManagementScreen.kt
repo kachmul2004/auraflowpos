@@ -232,7 +232,10 @@ fun TableManagementScreen(
             modifier = Modifier.weight(1f)
         ) {
             val tablesInSection = tablesBySection[selectedSection] ?: emptyList()
-            items(tablesInSection) { table ->
+            items(
+                items = tablesInSection,
+                key = { it.id }
+            ) { table ->
                 TableCardModern(
                     table = table,
                     isCurrentCart = table.id == currentTableId,

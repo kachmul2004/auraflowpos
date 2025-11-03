@@ -11,10 +11,12 @@ import com.theauraflow.pos.domain.repository.CartRepository
 import com.theauraflow.pos.domain.repository.OrderRepository
 import com.theauraflow.pos.domain.repository.OrderStatistics
 import com.theauraflow.pos.data.local.LocalStorage
+import com.theauraflow.pos.util.currentTimeMillis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.GlobalScope
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -29,7 +31,6 @@ class OrderRepositoryImpl(
 
     private val _ordersCache = MutableStateFlow<List<Order>>(emptyList())
     private var orderCounter = 1000 // Start from 1000 for order numbers
-    private val baseTimestamp = 1704067200000L // Jan 1, 2024
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -41,17 +42,31 @@ class OrderRepositoryImpl(
     }
 
     init {
-        // Load orders from storage on init
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
+        // Load orders from storage on init - use GlobalScope to ensure it runs
+        println("🏗️ OrderRepositoryImpl: Initializing...")
+        GlobalScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+            println("📂 DEBUG: Loading orders from storage (init)...")
             loadOrdersFromStorage()
+            println("📂 DEBUG: Init complete. Loaded ${_ordersCache.value.size} orders")
+
+            // Emit the loaded orders to the flow immediately
+            if (_ordersCache.value.isNotEmpty()) {
+                println("📡 DEBUG: Emitting ${_ordersCache.value.size} orders to observers")
+            }
         }
     }
 
     private suspend fun loadOrdersFromStorage() {
         try {
+            println("🔍 DEBUG: Reading from localStorage...")
             val jsonString = localStorage.getString(ORDERS_KEY)
+            println("🔍 DEBUG: Got JSON: ${jsonString?.take(100)}")
+
             if (jsonString != null) {
+                println("🔍 DEBUG: Deserializing JSON...")
                 val orders = json.decodeFromString<List<Order>>(jsonString)
+                println("✅ DEBUG: Deserialized ${orders.size} orders")
+
                 _ordersCache.value = orders
 
                 // Update counter to avoid order number collisions
@@ -59,10 +74,18 @@ class OrderRepositoryImpl(
                     it.orderNumber.substringAfter("ORD-").toIntOrNull()
                 }.maxOrNull() ?: 999
                 orderCounter = maxOrderNumber + 1
+
+                println("✅ DEBUG: Loaded ${orders.size} orders from storage")
+                orders.forEach { order ->
+                    println("   - ${order.orderNumber}: ${order.items.size} items, $${order.total}")
+                }
+            } else {
+                println("ℹ️ DEBUG: No orders in storage yet")
             }
         } catch (e: Exception) {
             // If loading fails, start fresh
-            println("Failed to load orders: ${e.message}")
+            println("❌ Failed to load orders: ${e.message}")
+            e.printStackTrace()
         }
     }
 
@@ -82,13 +105,21 @@ class OrderRepositoryImpl(
         notes: String?
     ): Result<Order> {
         return try {
+            println("🏁 OrderRepository.createOrder() - START")
+
             // Get current cart items and totals
             val cartItems = cartRepository.getCart().getOrThrow()
+            println("🛒 Cart has ${cartItems.size} items:")
+            cartItems.forEach { item ->
+                println("   - ${item.product.name} x${item.quantity} = $${item.total}")
+            }
+
             val totals = cartRepository.getCartTotals().getOrThrow()
+            println("💰 Cart totals: subtotal=$${totals.subtotal}, tax=$${totals.tax}, total=$${totals.total}")
 
             // Create order with actual cart data
             val orderNumber = "ORD-${orderCounter++}"
-            val now = baseTimestamp + (orderCounter * 1000L) // Simple incrementing timestamp
+            val now = currentTimeMillis()
 
             val order = Order(
                 id = "local-${kotlin.random.Random.nextInt(10000, 99999)}",
@@ -107,14 +138,26 @@ class OrderRepositoryImpl(
                 completedAt = now
             )
 
+            println("✅ Order created: ${order.orderNumber}")
+            println("   Items: ${order.items.size}")
+            order.items.forEach { item ->
+                println("   - ${item.product.name} x${item.quantity}")
+            }
+            println("   Total: $${order.total}")
+
             // Add to cache
             _ordersCache.value = listOf(order) + _ordersCache.value
+            println("📦 Added to cache. Cache now has ${_ordersCache.value.size} orders")
 
             // Persist to storage
+            println("💾 Saving to storage...")
             saveOrdersToStorage()
+            println("✅ Saved to storage successfully")
 
             Result.success(order)
         } catch (e: Exception) {
+            println("❌ Order creation failed: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
@@ -200,7 +243,7 @@ class OrderRepositoryImpl(
             Result.success(orders)
         } catch (e: Exception) {
             if (_ordersCache.value.isNotEmpty()) {
-                val now = baseTimestamp + (orderCounter * 1000L)
+                val now = currentTimeMillis()
                 val todayOrders = _ordersCache.value.filter { it.createdAt >= now - 86400000 }
                 Result.success(todayOrders)
             } else {
@@ -211,18 +254,51 @@ class OrderRepositoryImpl(
 
     override suspend fun cancelOrder(orderId: String, reason: String): Result<Order> {
         return try {
-            val dto = orderApiClient.cancelOrder(orderId, reason)
-            val updated = dto.toDomain()
+            // Try API call first
+            try {
+                val dto = orderApiClient.cancelOrder(orderId, reason)
+                val updated = dto.toDomain()
 
-            // Update cache
-            _ordersCache.value = _ordersCache.value.map {
-                if (it.id == updated.id) updated else it
+                // Update cache with API response
+                _ordersCache.value = _ordersCache.value.map {
+                    if (it.id == updated.id) updated else it
+                }
+
+                // Persist to storage
+                saveOrdersToStorage()
+
+                return Result.success(updated)
+            } catch (apiError: Exception) {
+                // Fallback: Update order status locally if API fails
+                val order = _ordersCache.value.find { it.id == orderId }
+                if (order != null) {
+                    val cancelledOrder = order.copy(
+                        orderStatus = OrderStatus.CANCELLED,
+                        paymentStatus = PaymentStatus.REFUNDED
+                    )
+                    _ordersCache.value = _ordersCache.value.map {
+                        if (it.id == orderId) cancelledOrder else it
+                    }
+                    saveOrdersToStorage()
+                    Result.success(cancelledOrder)
+                } else {
+                    Result.failure(apiError)
+                }
             }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteOrder(orderId: String): Result<Unit> {
+        return try {
+            // Remove from cache
+            _ordersCache.value = _ordersCache.value.filter { it.id != orderId }
 
             // Persist to storage
             saveOrdersToStorage()
 
-            Result.success(updated)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -1,6 +1,8 @@
 package com.theauraflow.pos.ui.dialog
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -9,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -34,6 +37,7 @@ fun CashDrawerDialog(
     var selectedTab by remember { mutableStateOf(0) } // 0 = Cash In, 1 = Cash Out
     var amount by remember { mutableStateOf("") }
     var reason by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     // Reset on open
     LaunchedEffect(show) {
@@ -64,6 +68,12 @@ fun CashDrawerDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            focusManager.clearFocus()
+                        }
                         .padding(24.dp)
                 ) {
                     // Header

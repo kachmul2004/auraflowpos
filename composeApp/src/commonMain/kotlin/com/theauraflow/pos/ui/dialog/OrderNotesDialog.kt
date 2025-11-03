@@ -1,5 +1,7 @@
 package com.theauraflow.pos.ui.dialog
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -9,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -31,6 +34,7 @@ fun OrderNotesDialog(
 ) {
     var notes by remember(currentNotes) { mutableStateOf(currentNotes) }
     val maxLength = 500
+    val focusManager = LocalFocusManager.current
 
     if (show) {
         Dialog(
@@ -53,6 +57,11 @@ fun OrderNotesDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(24.dp)
+                        .clickable(
+                            interactionSource = MutableInteractionSource(),
+                            indication = null,
+                            onClick = { focusManager.clearFocus() }
+                        )
                 ) {
                     // Header
                     Row(

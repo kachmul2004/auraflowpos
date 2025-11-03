@@ -22,9 +22,10 @@ import com.theauraflow.pos.data.local.entity.*
         OrderEntity::class,
         OrderItemEntity::class,
         CustomerEntity::class,
-        UserEntity::class
+        UserEntity::class,
+        TransactionEntity::class
     ],
-    version = 1,
+    version = 2, // Increment version for schema change
     exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -38,6 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun orderItemDao(): OrderItemDao
     abstract fun customerDao(): CustomerDao
     abstract fun userDao(): UserDao
+    abstract fun transactionDao(): TransactionDao
 }
 
 /**

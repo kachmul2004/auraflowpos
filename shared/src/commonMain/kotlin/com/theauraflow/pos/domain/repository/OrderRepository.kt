@@ -79,6 +79,13 @@ interface OrderRepository {
     suspend fun cancelOrder(orderId: String, reason: String): Result<Order>
 
     /**
+     * Delete an order (super admin only).
+     * WARNING: This permanently deletes the order and should only be used
+     * when absolutely necessary. Prefer cancellation instead.
+     */
+    suspend fun deleteOrder(orderId: String): Result<Unit>
+
+    /**
      * Refund an order.
      * Requires manager/admin permissions.
      *

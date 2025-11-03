@@ -131,7 +131,10 @@ fun OrderHistoryScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(orders) { order ->
+                        items(
+                            items = orders,
+                            key = { it.id }
+                        ) { order ->
                             OrderCard(
                                 order = order,
                                 onClick = { onOrderClick(order) }
